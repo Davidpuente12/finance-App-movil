@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "wallet",
+    "slug": "wallet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#081120"
+      }
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
