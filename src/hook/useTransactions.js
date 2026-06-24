@@ -16,12 +16,20 @@ const useTransactions = (storageKey, initialValue = []) => {
     };
 
     loadTransactions();
-  }, [initialValue, storageKey]);
+  }, [storageKey]);
 
   useEffect(() => {
-    if (!loading) {
-      AsyncStorage.setItem(storageKey, JSON.stringify(lista));
-    }
+    const saveTransactions = async () => {
+      if (!loading) {
+        try {
+          await AsyncStorage.setItem(storageKey, JSON.stringify(lista));
+        } catch (error) {
+          console.error("Error guardando transacciones:", error);
+        }
+      }
+    };
+
+    saveTransactions();
   }, [lista, loading, storageKey]);
 
   return {

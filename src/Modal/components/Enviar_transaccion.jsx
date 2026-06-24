@@ -11,8 +11,7 @@ function EnviarTransaccion({
   const [categoria, setCategoria] = useState("");
   const [monto, setMonto] = useState("");
   const [dateValue, setDateValue] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    return new Date().toISOString().split("T")[0];
   });
   const [descripcion, setDescripcion] = useState("");
 

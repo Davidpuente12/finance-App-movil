@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { KeyboardAvoidingView, Platform } from "react-native";
 
 function TransactionModal({
   visible,
@@ -15,6 +16,7 @@ function TransactionModal({
   closeModal,
   saveTransaction,
   deleteTransaction,
+  // estados de los valores
   formType,
   setFormType,
   formMonto,
@@ -25,6 +27,7 @@ function TransactionModal({
   setFormDescripcion,
   formFecha,
   setFormFecha,
+  //
   categories,
 }) {
   return (
@@ -36,6 +39,7 @@ function TransactionModal({
     >
       <View style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
+          {/* header */}
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
               <Text style={styles.modalKicker}>Registrar Operacion</Text>
@@ -50,7 +54,7 @@ function TransactionModal({
               <Text style={styles.closeButtonText}>⨉</Text>
             </Pressable>
           </View>
-
+          {/* action-bar */}
           <View style={styles.actionBar}>
             {editingTransaction ? (
               <Pressable
@@ -103,41 +107,47 @@ function TransactionModal({
             </Pressable>
           </View>
 
-          <ScrollView>
-            <TextInput
-              style={styles.input}
-              placeholder="Monto"
-              placeholderTextColor="#64748b"
-              value={formMonto}
-              onChangeText={setFormMonto}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Categoría"
-              placeholderTextColor="#64748b"
-              value={formCategoria}
-              onChangeText={setFormCategoria}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Descripción"
-              placeholderTextColor="#64748b"
-              value={formDescripcion}
-              onChangeText={setFormDescripcion}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Fecha YYYY-MM-DD"
-              placeholderTextColor="#64748b"
-              value={formFecha}
-              onChangeText={setFormFecha}
-            />
+          {/* formulario */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+          >
+            <ScrollView>
+              <TextInput
+                style={styles.input}
+                placeholder="Monto"
+                placeholderTextColor="#64748b"
+                value={formMonto}
+                onChangeText={setFormMonto}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Categoría"
+                placeholderTextColor="#64748b"
+                value={formCategoria}
+                onChangeText={setFormCategoria}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Descripción"
+                placeholderTextColor="#64748b"
+                value={formDescripcion}
+                onChangeText={setFormDescripcion}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Fecha YYYY-MM-DD"
+                placeholderTextColor="#64748b"
+                value={formFecha}
+                onChangeText={setFormFecha}
+              />
 
-            <Text style={styles.helperText}>
-              Categorías sugeridas: {categories.join(" · ")}
-            </Text>
-          </ScrollView>
+              <Text style={styles.helperText}>
+                Categorías sugeridas: {categories.join(" · ")}
+              </Text>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </View>
       </View>
     </Modal>
@@ -151,6 +161,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalCard: {
+    flex: 1,
     maxHeight: "92%",
     backgroundColor: "#0f172a",
     borderTopLeftRadius: 28,
