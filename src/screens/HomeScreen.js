@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,10 +9,10 @@ import {
 
 import { MetricCard } from "../components/MetricCard";
 import { TransactionRow } from "../components/TransactionRow";
+import { ResumenMensualHome } from "../components/ResumenMensualHome";
 
 function HomeScreen({
   loading,
-  lista,
   recentTransactions,
   balanceTotal,
   totalIngresosMensual,
@@ -28,7 +27,7 @@ function HomeScreen({
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
       <View style={styles.cardsRow}>
         <MetricCard
           label="Balance"
@@ -47,12 +46,17 @@ function HomeScreen({
         />
       </View>
 
+      <ResumenMensualHome
+        selectedMonthItems={recentTransactions}
+        totalIngresosMensual={totalIngresosMensual}
+        totalGastosMensual={totalGastosMensual}
+      />
+
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Últimos registros</Text>
-          <Pressable style={styles.secondaryButton} onPress={openNewModal}>
-            <Text style={styles.secondaryButtonText}>Nuevo</Text>
-          </Pressable>
+          <Text style={styles.sectionTitle}>
+            Resumen de los últimos registros
+          </Text>
         </View>
 
         {loading ? (
@@ -61,34 +65,24 @@ function HomeScreen({
             <Text style={styles.loadingText}>Cargando datos guardados...</Text>
           </View>
         ) : (
-          <FlatList
-            data={latestTransactions.slice(0, 5)}
-            keyExtractor={(item) => String(item.id)}
-            scrollEnabled={false}
-            ListEmptyComponent={
+          <View>
+            {latestTransactions.slice(0, 5).length === 0 ? (
               <EmptyState text="Aún no hay transacciones registradas." />
-            }
-            renderItem={({ item }) => (
-              <TransactionRow
-                item={item}
-                formatearMonto={formatearMonto}
-                onEdit={() => openEditModal(item)}
-                onDelete={() => deleteTransaction(item.id)}
-              />
+            ) : (
+              latestTransactions
+                .slice(0, 5)
+                .map((item) => (
+                  <TransactionRow
+                    key={item.id}
+                    item={item}
+                    formatearMonto={formatearMonto}
+                    onEdit={() => openEditModal(item)}
+                    onDelete={() => deleteTransaction(item.id)}
+                  />
+                ))
             )}
-          />
+          </View>
         )}
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Cobertura</Text>
-          <Text style={styles.sectionMeta}>{lista.length} movimientos</Text>
-        </View>
-        <Text style={styles.coverageText}>
-          La vista principal ya está desacoplada en componentes nativos; el
-          siguiente paso es completar las pantallas de historial y estadísticas.
-        </Text>
       </View>
     </ScrollView>
   );
@@ -103,25 +97,23 @@ function EmptyState({ text }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, gap: 16, backgroundColor: "#081120", flex: 1 },
-  hero: { gap: 8, paddingVertical: 8 },
-  kicker: {
-    color: "#7dd3fc",
-    textTransform: "uppercase",
-    letterSpacing: 1.4,
-    fontSize: 12,
+  container: {
+    flexGrow: 1,
+    gap: 16,
+    backgroundColor: "rgb(32, 32, 38)",
+    paddingBottom: 20,
   },
-  title: { color: "#f8fafc", fontSize: 28, fontWeight: "800" },
-  subtitle: { color: "#cbd5e1", fontSize: 14, lineHeight: 20 },
   cardsRow: {
-    flexDirection: "row",
     backgroundColor: "rgb(20, 23, 28)",
+    flexDirection: "row",
+    padding: 10,
   },
   section: {
+    marginHorizontal: 10,
     gap: 12,
     padding: 16,
     borderRadius: 24,
-    backgroundColor: "#0f172a",
+    backgroundColor: "rgb(20, 23, 28)",
     borderWidth: 1,
     borderColor: "#1e293b",
   },
@@ -130,7 +122,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 18, fontWeight: "700" },
+  sectionTitle: { color: "#f8fafc", fontSize: 17, fontWeight: "700" },
   sectionMeta: { color: "#94a3b8", fontSize: 12 },
   loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
   loadingText: { color: "#cbd5e1" },

@@ -15,4 +15,20 @@ const getMonthTransactions = (items, selectedDate) => {
   });
 };
 
-export { getMonthTransactions, getTodayDate };
+const meses = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+];
+const mesActual = meses[new Date().getMonth()];
+
+export { getMonthTransactions, getTodayDate, mesActual };

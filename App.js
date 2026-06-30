@@ -5,7 +5,11 @@ import { createMaterialTopTabNavigator } from "@react-navigation/material-top-ta
 import { Ionicons } from "@expo/vector-icons";
 import { useTransactions } from "./src/hook/useTransactions";
 import { formatearMonto } from "./src/utils/formatearMonto.js";
-import { getMonthTransactions, getTodayDate } from "./src/utils/fechaActual";
+import {
+  getMonthTransactions,
+  getTodayDate,
+  mesActual,
+} from "./src/utils/fechaActual";
 import { categoriasGasto, categoriasIngreso } from "./src/data/categorias";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { RecordsScreen } from "./src/screens/RecordsScreen";
@@ -32,6 +36,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("todos");
   const [filterDate, setFilterDate] = useState(getTodayDate());
+  const [filterMonth, setFilterMonth] = useState(mesActual);
   // valores del formulario
   const [formType, setFormType] = useState("gasto");
   const [formMonto, setFormMonto] = useState("");
@@ -44,6 +49,7 @@ export default function App() {
     [lista, filterDate],
   );
 
+  // Balance, ingresos y gastos
   const totalGastosMensual = useMemo(
     () =>
       selectedMonthItems
@@ -62,43 +68,71 @@ export default function App() {
 
   const balanceTotal = totalIngresosMensual - totalGastosMensual;
 
+  // Filtros
+
+  const mesesMap = {
+    Enero: 1,
+    Febrero: 2,
+    Marzo: 3,
+    Abril: 4,
+    Mayo: 5,
+    Junio: 6,
+    Julio: 7,
+    Agosto: 8,
+    Septiembre: 9,
+    Octubre: 10,
+    Noviembre: 11,
+    Diciembre: 12,
+  };
+
   const allFilteredTransactions = useMemo(() => {
     return [...lista]
-      .filter((item) =>
-        (() => {
-          const normalizedQuery = searchQuery.trim().toLowerCase();
-          const matchType = filterType === "todos" || item.tipo === filterType;
-          const matchSearch =
-            normalizedQuery.length === 0 ||
-            item.categoria.toLowerCase().includes(normalizedQuery) ||
-            item.descripcion.toLowerCase().includes(normalizedQuery);
+      .filter((item) => {
+        const normalizedQuery = searchQuery.trim().toLowerCase();
+        const categoria = (item.categoria || "").toLowerCase();
+        const descripcion = (item.descripcion || "").toLowerCase();
 
-          const matchDate = (() => {
-            if (!filterDate) {
-              return true;
-            }
+        const matchSearch =
+          normalizedQuery.length === 0 ||
+          categoria.includes(normalizedQuery) ||
+          descripcion.includes(normalizedQuery);
 
-            const [year, month] = filterDate.split("-");
-            const itemFecha = item.fecha.includes("-")
-              ? item.fecha
-              : new Date(item.fecha).toISOString().split("T")[0];
-            const [itemYear, itemMonth] = itemFecha.split("-");
+        const matchDate = (() => {
+          if (!filterDate) return true;
 
-            return (
-              Number(itemYear) === Number(year) &&
-              Number(itemMonth) === Number(month)
-            );
-          })();
+          const [year, month] = filterDate.split("-");
+          const itemFecha = item.fecha.includes("-")
+            ? item.fecha
+            : new Date(item.fecha).toISOString().split("T")[0];
 
-          return matchType && matchSearch && matchDate;
-        })(),
-      )
+          const [itemYear, itemMonth] = itemFecha.split("-");
+
+          return (
+            Number(itemYear) === Number(year) &&
+            Number(itemMonth) === Number(month)
+          );
+        })();
+
+        const matchMonth = (() => {
+          if (!filterMonth) return true;
+          const mesNumero = mesesMap[filterMonth.toLowerCase()];
+          if (!mesNumero) return true;
+          const itemFecha = item.fecha.includes("-")
+            ? item.fecha
+            : new Date(item.fecha).toISOString().split("T")[0];
+          const [, itemMonth] = itemFecha.split("-");
+          return Number(itemMonth) === mesNumero;
+        })();
+
+        return matchSearch && matchDate && matchMonth;
+      })
       .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-  }, [lista, searchQuery, filterType, filterDate]);
+  }, [lista, searchQuery, filterDate, filterMonth]);
 
   const openNewModal = () => {
     setEditingTransaction(null);
     setFormType("gasto");
+    setFormCategoria("");
     setFormMonto("");
     setFormDescripcion("");
     setFormFecha(getTodayDate());
@@ -169,16 +203,16 @@ export default function App() {
               screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarActiveTintColor: "white",
-                tabBarInactiveTintColor: "#94a3b8",
+                // tabBarInactiveTintColor: "#94a3b8",
                 tabBarLabelStyle: styles.tabBarLabel,
                 tabBarStyle: styles.tabBarTop,
                 tabBarIndicatorStyle: styles.tabBarIndicator,
                 tabBarShowIcon: true,
                 tabBarIcon: ({ color, size }) => {
                   const iconName =
-                    route.name === "inicio"
+                    route.name === "Inicio"
                       ? "home-outline"
-                      : route.name === "registros"
+                      : route.name === "Registros"
                         ? "list-outline"
                         : "pie-chart-outline";
 
@@ -186,7 +220,7 @@ export default function App() {
                 },
               })}
             >
-              <Tab.Screen name="inicio">
+              <Tab.Screen name="Inicio">
                 {() => (
                   <HomeScreen
                     loading={loading}
@@ -202,32 +236,36 @@ export default function App() {
                 )}
               </Tab.Screen>
 
-              <Tab.Screen name="registros">
+              <Tab.Screen name="Registros">
                 {() => (
                   <RecordsScreen
                     loading={loading}
                     lista={lista}
-                    filteredTransactions={allFilteredTransactions}
+                    allFilteredTransactions={allFilteredTransactions}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
-                    filterType={filterType}
-                    setFilterType={setFilterType}
                     filterDate={filterDate}
                     setFilterDate={setFilterDate}
                     getTodayDate={getTodayDate}
                     openEditModal={openEditModal}
                     openNewModal={openNewModal}
+                    formFecha={formFecha}
+                    // filtro meses
+                    filterMonth={filterMonth}
+                    setFilterMonth={setFilterMonth}
+                    mesesMap={mesesMap}
                   />
                 )}
               </Tab.Screen>
 
-              <Tab.Screen name="estadisticas">
+              <Tab.Screen name="Estadisticas">
                 {() => (
                   <StatsScreen
                     lista={lista}
                     selectedMonthItems={selectedMonthItems}
                     totalIngresosMensual={totalIngresosMensual}
                     totalGastosMensual={totalGastosMensual}
+                    balanceTotal={balanceTotal}
                     formatearMonto={formatearMonto}
                   />
                 )}
@@ -254,7 +292,7 @@ export default function App() {
             />
 
             <Pressable style={styles.fab} onPress={openNewModal}>
-              <Ionicons name="add" size={30} color="#081120" />
+              <Ionicons name="add" size={30} color="white" />
             </Pressable>
           </View>
         </NavigationContainer>
@@ -264,12 +302,11 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#081120" },
+  safeArea: { flex: 1, backgroundColor: "rgb(32, 32, 38)" },
   tabBarTop: {
     backgroundColor: "rgb(79, 57, 246)",
-    borderBottomColor: "#1e293b",
     borderBottomWidth: 1,
-    paddingTop: 40,
+    paddingTop: 50,
     elevation: 8,
     shadowColor: "#000",
     shadowOpacity: 0.18,
@@ -279,10 +316,9 @@ const styles = StyleSheet.create({
   tabBarIndicator: {
     backgroundColor: "white",
     height: 3,
-    borderRadius: 999,
   },
   tabBarLabel: {
-    fontSize: 11,
+    fontSize: 16,
     fontWeight: "700",
     marginTop: 2,
   },
@@ -293,10 +329,10 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#38bdf8",
+    backgroundColor: "rgb(79, 57, 246)",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 10,
+    elevation: 5,
     shadowColor: "#000",
     shadowOpacity: 0.24,
     shadowRadius: 14,

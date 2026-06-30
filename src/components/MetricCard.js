@@ -13,10 +13,9 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     padding: 10,
-    backgroundColor: "rgb(20, 23, 28)",
   },
-  metricLabel: { color: "#94a3b8", fontSize: 12 },
-  metricValue: { fontSize: 20, fontWeight: "700" },
+  metricLabel: { color: "#94a3b8", fontSize: 13 },
+  metricValue: { fontSize: 17, fontWeight: "700" },
   primary: { color: "#38bdf8" },
   green: { color: "#34d399" },
   red: { color: "#fb7185" },

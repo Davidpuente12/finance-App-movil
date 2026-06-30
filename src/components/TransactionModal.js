@@ -7,8 +7,16 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import {
+  categorias_gastos,
+  categorias_ingresos,
+} from "../data/categoriasfinas";
+import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { formatearMonto } from "../utils/formatearMonto";
 import { KeyboardAvoidingView, Platform } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 function TransactionModal({
   visible,
@@ -30,6 +38,20 @@ function TransactionModal({
   //
   categories,
 }) {
+  const montoFormat = formMonto ? formatearMonto(Number(formMonto)) : "";
+  function handleMontoChange(text) {
+    const raw = text.replace(/\D/g, "");
+    setFormMonto(raw);
+  }
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedMonto, setSelectedMonto] = useState(null);
+  const [selectedDescription, setSelectedDescription] = useState(null);
+
+  const typeOfTransaction =
+    formType === "gasto" ? categorias_gastos : categorias_ingresos;
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   return (
     <Modal
       visible={visible}
@@ -42,7 +64,9 @@ function TransactionModal({
           {/* header */}
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
-              <Text style={styles.modalKicker}>Registrar Operacion</Text>
+              <Pressable onPress={closeModal} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>⨉</Text>
+              </Pressable>
               <Text style={styles.modalTitle}>
                 {editingTransaction
                   ? "Editar transacción"
@@ -50,60 +74,47 @@ function TransactionModal({
               </Text>
             </View>
 
-            <Pressable onPress={closeModal} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>⨉</Text>
-            </Pressable>
-          </View>
-          {/* action-bar */}
-          <View style={styles.actionBar}>
-            {editingTransaction ? (
-              <Pressable
-                style={styles.iconAction}
-                onPress={() => deleteTransaction(editingTransaction.id)}
-              >
-                <Ionicons name="trash-outline" size={20} color="#fda4af" />
-              </Pressable>
-            ) : (
-              <View style={styles.iconActionPlaceholder} />
-            )}
+            {/* action-bar */}
+            <View style={styles.actionBar}>
+              {editingTransaction ? (
+                <Pressable
+                  style={styles.iconAction}
+                  onPress={() => deleteTransaction(editingTransaction.id)}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={20}
+                    color="rgb(254, 83, 83)"
+                  />
+                </Pressable>
+              ) : (
+                <View style={styles.iconActionPlaceholder} />
+              )}
 
-            <Pressable style={styles.sendButton} onPress={saveTransaction}>
-              <Text style={styles.sendButtonText}>Enviar</Text>
-            </Pressable>
+              <Pressable style={styles.sendButton} onPress={saveTransaction}>
+                <Text style={styles.sendButtonText}>✓</Text>
+              </Pressable>
+            </View>
           </View>
 
           <View style={styles.segmented}>
             <Pressable
               style={[
                 styles.segmentButton,
-                formType === "gasto" && styles.segmentButtonActive,
+                formType === "gasto" && styles.segmentButtonGastos,
               ]}
               onPress={() => setFormType("gasto")}
             >
-              <Text
-                style={[
-                  styles.segmentText,
-                  formType === "gasto" && styles.segmentTextActive,
-                ]}
-              >
-                Gastos
-              </Text>
+              <Text style={styles.segmentText}>Gastos</Text>
             </Pressable>
             <Pressable
               style={[
                 styles.segmentButton,
-                formType === "ingreso" && styles.segmentButtonActive,
+                formType === "ingreso" && styles.segmentButtonIngresos,
               ]}
               onPress={() => setFormType("ingreso")}
             >
-              <Text
-                style={[
-                  styles.segmentText,
-                  formType === "ingreso" && styles.segmentTextActive,
-                ]}
-              >
-                Ingresos
-              </Text>
+              <Text style={styles.segmentText}>Ingresos</Text>
             </Pressable>
           </View>
 
@@ -112,40 +123,101 @@ function TransactionModal({
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
           >
+            <Text style={styles.labelCategories}>Categorias</Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesList}
+              style={{ maxHeight: 120 }}
+            >
+              {typeOfTransaction.map((item, index) => (
+                <View key={index}>
+                  <Pressable
+                    onPress={() => {
+                      setFormCategoria(item.name);
+                      setSelectedCategory(item.name);
+                    }}
+                    style={[
+                      styles.categoryItem,
+                      { backgroundColor: item.color },
+                      selectedCategory === item.name &&
+                        styles.categoryItemActive,
+                    ]}
+                  >
+                    <View>{item.icon}</View>
+                  </Pressable>
+                  <Text style={styles.categoryText}>
+                    {item.name.length > 6
+                      ? item.name.slice(0, 5) + "…"
+                      : item.name}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
             <ScrollView>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    borderBottomColor: selectedMonto
+                      ? "rgba(79,57,246)"
+                      : "#334155",
+                  },
+                ]}
                 placeholder="Monto"
-                placeholderTextColor="#64748b"
-                value={formMonto}
-                onChangeText={setFormMonto}
+                placeholderTextColor={
+                  selectedMonto ? "rgba(119,119,255)" : "rgb(200,200,200)"
+                }
+                value={montoFormat}
+                onChangeText={handleMontoChange}
                 keyboardType="numeric"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Categoría"
-                placeholderTextColor="#64748b"
-                value={formCategoria}
-                onChangeText={setFormCategoria}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Descripción"
-                placeholderTextColor="#64748b"
-                value={formDescripcion}
-                onChangeText={setFormDescripcion}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Fecha YYYY-MM-DD"
-                placeholderTextColor="#64748b"
-                value={formFecha}
-                onChangeText={setFormFecha}
+                onFocus={() => setSelectedMonto(true)}
+                onBlur={() => setSelectedMonto(false)}
               />
 
-              <Text style={styles.helperText}>
-                Categorías sugeridas: {categories.join(" · ")}
-              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderBottomColor: selectedDescription
+                      ? "rgba(79,57,246)"
+                      : "#334155",
+                  },
+                ]}
+                placeholder="Descripción"
+                placeholderTextColor={
+                  selectedDescription ? "rgba(119,119,255)" : "rgb(200,200,200)"
+                }
+                value={formDescripcion}
+                onChangeText={setFormDescripcion}
+                onFocus={() => setSelectedDescription(true)}
+                onBlur={() => setSelectedDescription(false)}
+              />
+              <Pressable
+                onPress={() => setShowDatePicker(true)}
+                style={styles.input}
+              >
+                <Text style={styles.inputDateText}>
+                  {formFecha || "Fecha YYYY-MM-DD"}
+                </Text>
+              </Pressable>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={new Date(formFecha)}
+                  mode="date"
+                  display="default"
+                  onValueChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      const isoDate = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
+                      setFormFecha(isoDate);
+                    }
+                    setShowDatePicker(false);
+                  }}
+                  onDismiss={() => setShowDatePicker(false)}
+                />
+              )}
             </ScrollView>
           </KeyboardAvoidingView>
         </View>
@@ -157,13 +229,13 @@ function TransactionModal({
 const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(2, 6, 23, 0.72)",
+    backgroundColor: "rgba(25, 25, 25, 0.72)",
     justifyContent: "flex-end",
   },
   modalCard: {
     flex: 1,
     maxHeight: "92%",
-    backgroundColor: "#0f172a",
+    backgroundColor: "  rgb(20, 23, 28)",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 16,
@@ -175,83 +247,96 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
+    gap: 10,
   },
-  headerLeft: { flex: 1, gap: 2 },
-  modalKicker: {
-    color: "#7dd3fc",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-  },
+
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   modalTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
   closeButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#334155",
     alignItems: "center",
     justifyContent: "center",
   },
   closeButtonText: { color: "#e2e8f0", fontSize: 18, lineHeight: 20 },
   actionBar: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 14,
   },
   iconAction: {
     width: 42,
     height: 42,
-    borderRadius: 21,
-    borderWidth: 1,
-    borderColor: "#334155",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#111827",
   },
   iconActionPlaceholder: {
     width: 42,
     height: 42,
   },
   sendButton: {
-    flex: 1,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#38bdf8",
     alignItems: "center",
     justifyContent: "center",
   },
-  sendButtonText: { color: "#081120", fontWeight: "800" },
-  segmented: { flexDirection: "row", gap: 10, marginBottom: 14 },
+  sendButtonText: {
+    color: "rgb(119, 119, 255)",
+    fontWeight: "800",
+    fontSize: 18,
+  },
+  segmented: {
+    flexDirection: "row",
+    marginBottom: 14,
+    backgroundColor: " rgb(32, 32, 38)",
+    borderRadius: 14,
+  },
   segmentButton: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#334155",
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: "center",
   },
-  segmentButtonActive: { backgroundColor: "#1d4ed8", borderColor: "#60a5fa" },
-  segmentText: { color: "#cbd5e1", fontWeight: "600" },
-  segmentTextActive: { color: "#fff" },
+  segmentButtonGastos: { backgroundColor: "rgb(254, 83, 83)" },
+  segmentButtonIngresos: { backgroundColor: " rgb(0, 212, 146)" },
+  segmentText: { color: "white", fontWeight: "600", fontSize: 16 },
   input: {
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    fontSize: 17,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    padding: 18,
     color: "#f8fafc",
-    backgroundColor: "#111827",
     marginBottom: 10,
   },
-  helperText: {
-    color: "#94a3b8",
+  inputDateText: {
+    color: "white",
+    fontSize: 17,
+    color: "rgb(200,200,200)",
+  },
+  // iconos de categorias
+  labelCategories: { color: "rgb(200,200,200)", fontSize: 17, marginTop: 15 },
+  categoriesList: {
+    flexDirection: "row",
+    marginTop: 25,
+    gap: 12,
+  },
+  categoryItem: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoryItemActive: {
+    transform: [{ scale: 1.1 }],
+    backgroundColor: "rgba(79,57,246)",
+  },
+  categoryText: {
     marginTop: 6,
-    marginBottom: 12,
-    lineHeight: 18,
+    color: "white",
+    textAlign: "center",
+  },
+  categoryTextActive: {
+    fontWeight: 700,
   },
 });
 

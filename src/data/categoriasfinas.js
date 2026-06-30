@@ -11,67 +11,67 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 const categorias_gastos = [
   {
     name: "Restaurante",
-    icon: <MaterialCommunityIcons name="hamburger" size={20} color="black" />,
+    icon: <MaterialCommunityIcons name="hamburger" size={20} color="white" />,
     color: "#f16262",
   },
   {
     name: "Supermercado",
-    icon: <FontAwesome name="shopping-cart" size={20} color="black" />,
+    icon: <FontAwesome name="shopping-cart" size={20} color="white" />,
     color: "#ef4444",
   },
   {
     name: "Vivienda",
-    icon: <Entypo name="home" size={20} color="black" />,
+    icon: <Entypo name="home" size={20} color="white" />,
     color: "#ffac1c",
   },
   {
     name: "Servicios",
-    icon: <MaterialIcons name="electrical-services" size={20} color="black" />,
+    icon: <MaterialIcons name="electrical-services" size={20} color="white" />,
     color: "#e7ab42",
   },
   {
     name: "Internet",
-    icon: <FontAwesome name="wifi" size={20} color="black" />,
+    icon: <FontAwesome name="wifi" size={20} color="white" />,
     color: "#3b82f6",
   },
   {
     name: "Transporte",
-    icon: <MaterialIcons name="directions-bus" size={20} color="black" />,
+    icon: <MaterialIcons name="directions-bus" size={20} color="white" />,
     color: "#34c9e4",
   },
   {
     name: "Vehiculo",
-    icon: <FontAwesome5 name="car" size={20} color="black" />,
+    icon: <FontAwesome5 name="car" size={20} color="white" />,
     color: "#34c9e4",
   },
   {
     name: "Compras",
-    icon: <AntDesign name="shopping" size={20} color="black" />,
+    icon: <AntDesign name="shopping" size={20} color="white" />,
     color: "#fa51a6",
   },
   {
     name: "Entretenimiento",
-    icon: <Ionicons name="game-controller" size={20} color="black" />,
+    icon: <Ionicons name="game-controller" size={20} color="white" />,
     color: "#fa51a6",
   },
   {
     name: "Salud",
-    icon: <MaterialIcons name="health-and-safety" size={20} color="black" />,
+    icon: <MaterialIcons name="health-and-safety" size={20} color="white" />,
     color: "#10b981",
   },
   {
     name: "Educación",
-    icon: <FontAwesome5 name="university" size={20} color="black" />,
+    icon: <FontAwesome5 name="university" size={20} color="white" />,
     color: "#8b5cf6",
   },
   {
     name: "Inversiones",
-    icon: <AntDesign name="rise" size={20} color="black" />,
+    icon: <AntDesign name="rise" size={20} color="white" />,
     color: "#84cc16",
   },
   {
     name: "Otros",
-    icon: <Entypo name="wallet" size={20} color="black" />,
+    icon: <Entypo name="wallet" size={20} color="white" />,
     color: "#6b7280",
   },
 ];
@@ -79,17 +79,17 @@ const categorias_gastos = [
 const categorias_ingresos = [
   {
     name: "Salario",
-    icon: <Fontisto name="dinners-club" size={15} color="black" />,
+    icon: <Fontisto name="dinners-club" size={15} color="white" />,
     color: "#d9c71f",
   },
   {
     name: "Inversiones",
-    icon: <AntDesign name="rise" size={20} color="black" />,
+    icon: <AntDesign name="rise" size={20} color="white" />,
     color: "#84cc16",
   },
   {
     name: "Otros",
-    icon: <Entypo name="wallet" size={20} color="black" />,
+    icon: <Entypo name="wallet" size={20} color="white" />,
     color: "#06b6d4",
   },
 ];
