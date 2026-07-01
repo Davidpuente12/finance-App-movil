@@ -44,27 +44,44 @@ function TransactionModal({
     setFormMonto(raw);
   }
 
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedMonto, setSelectedMonto] = useState(null);
-  const [selectedDescription, setSelectedDescription] = useState(null);
+  const [selectedMonto, setSelectedMonto] = useState(false);
+  const [selectedDescription, setSelectedDescription] = useState(false);
 
   const typeOfTransaction =
     formType === "gasto" ? categorias_gastos : categorias_ingresos;
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  function handleSave() {
+    const payload = {
+      tipo: formType,
+      monto: Number(formMonto),
+      categoria: formCategoria,
+      descripcion: formDescripcion,
+      fecha: formFecha,
+    };
+    saveTransaction(payload, editingTransaction?.id);
+    handleOpen();
+  }
+
+  function handleOpen() {
+    setSelectedMonto(false);
+    setSelectedDescription(false);
+    closeModal();
+  }
 
   return (
     <Modal
       visible={visible}
       animationType="slide"
       transparent
-      onRequestClose={closeModal}
+      onRequestClose={handleOpen}
     >
       <View style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
           {/* header */}
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
-              <Pressable onPress={closeModal} style={styles.closeButton}>
+              <Pressable onPress={handleOpen} style={styles.closeButton}>
                 <Text style={styles.closeButtonText}>⨉</Text>
               </Pressable>
               <Text style={styles.modalTitle}>
@@ -79,7 +96,10 @@ function TransactionModal({
               {editingTransaction ? (
                 <Pressable
                   style={styles.iconAction}
-                  onPress={() => deleteTransaction(editingTransaction.id)}
+                  onPress={() => {
+                    deleteTransaction(editingTransaction.id);
+                    handleOpen();
+                  }}
                 >
                   <Ionicons
                     name="trash-outline"
@@ -91,7 +111,7 @@ function TransactionModal({
                 <View style={styles.iconActionPlaceholder} />
               )}
 
-              <Pressable style={styles.sendButton} onPress={saveTransaction}>
+              <Pressable style={styles.sendButton} onPress={handleSave}>
                 <Text style={styles.sendButtonText}>✓</Text>
               </Pressable>
             </View>
@@ -136,13 +156,11 @@ function TransactionModal({
                   <Pressable
                     onPress={() => {
                       setFormCategoria(item.name);
-                      setSelectedCategory(item.name);
                     }}
                     style={[
                       styles.categoryItem,
                       { backgroundColor: item.color },
-                      selectedCategory === item.name &&
-                        styles.categoryItemActive,
+                      formCategoria === item.name && styles.categoryItemActive,
                     ]}
                   >
                     <View>{item.icon}</View>
@@ -155,6 +173,7 @@ function TransactionModal({
                 </View>
               ))}
             </ScrollView>
+
             <ScrollView>
               <TextInput
                 style={[
@@ -205,13 +224,29 @@ function TransactionModal({
 
               {showDatePicker && (
                 <DateTimePicker
-                  value={new Date(formFecha)}
+                  value={
+                    formFecha
+                      ? (() => {
+                          const [year, month, day] = formFecha
+                            .split("-")
+                            .map(Number);
+                          return new Date(year, month - 1, day);
+                        })()
+                      : new Date()
+                  }
                   mode="date"
                   display="default"
                   onValueChange={(event, selectedDate) => {
                     if (selectedDate) {
-                      const isoDate = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
-                      setFormFecha(isoDate);
+                      const year = selectedDate.getFullYear();
+                      const month = String(
+                        selectedDate.getMonth() + 1,
+                      ).padStart(2, "0");
+                      const day = String(selectedDate.getDate()).padStart(
+                        2,
+                        "0",
+                      );
+                      setFormFecha(`${year}-${month}-${day}`);
                     }
                     setShowDatePicker(false);
                   }}
@@ -234,10 +269,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     flex: 1,
-    maxHeight: "92%",
-    backgroundColor: "  rgb(20, 23, 28)",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    backgroundColor: "  rgb(20, 23, 28,0.9)",
     padding: 16,
     borderWidth: 1,
     borderColor: "#1e293b",
@@ -288,16 +320,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: 14,
     backgroundColor: " rgb(32, 32, 38)",
-    borderRadius: 14,
+    borderRadius: 10,
   },
   segmentButton: {
     flex: 1,
-    borderRadius: 14,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: "center",
   },
-  segmentButtonGastos: { backgroundColor: "rgb(254, 83, 83)" },
-  segmentButtonIngresos: { backgroundColor: " rgb(0, 212, 146)" },
+  segmentButtonGastos: {
+    backgroundColor: "rgb(254, 83, 83)",
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  segmentButtonIngresos: {
+    backgroundColor: " rgb(0, 212, 146)",
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
   segmentText: { color: "white", fontWeight: "600", fontSize: 16 },
   input: {
     fontSize: 17,

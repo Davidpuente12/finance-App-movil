@@ -39,6 +39,8 @@ function StatsScreen({
   totalIngresosMensual,
   totalGastosMensual,
   balanceTotal,
+  filterMonth,
+  filterYear,
 }) {
   const annualExpenseByMonth = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -66,6 +68,8 @@ function StatsScreen({
   );
 
   const maxAnnualExpense = Math.max(...annualExpenseByMonth, 1);
+  const maxIndex = annualExpenseByMonth.indexOf(maxAnnualExpense);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.cardsRow}>
@@ -90,6 +94,8 @@ function StatsScreen({
         selectedMonthItems={selectedMonthItems}
         totalIngresosMensual={totalIngresosMensual}
         totalGastosMensual={totalGastosMensual}
+        filterMonth={filterMonth}
+        filterYear={filterYear}
       />
 
       <View style={styles.section}>
@@ -99,12 +105,12 @@ function StatsScreen({
           <MetricLine
             label="Gastos del año"
             value={formatearMonto(annualExpenseTotal)}
-            tone="negative"
+            tone="neutral"
           />
           <MetricLine
             label="Mes más alto"
             value={formatearMonto(Math.max(...annualExpenseByMonth))}
-            tone="neutral"
+            tone="negative"
           />
         </View>
 
@@ -112,6 +118,7 @@ function StatsScreen({
           <View style={styles.barChart}>
             {annualExpenseByMonth.map((value, index) => {
               const height = (value / maxAnnualExpense) * 180;
+              const isMax = index === maxIndex;
 
               return (
                 <View key={monthLabels[index]} style={styles.barColumn}>
@@ -119,7 +126,8 @@ function StatsScreen({
                     <View
                       style={[
                         styles.barFill,
-                        { height: Math.max(height, value > 0 ? 8 : 2) },
+                        { height: Math.max(height, value > 0 ? 8 : 0) },
+                        isMax && styles.barFillMax,
                       ]}
                     />
                   </View>
@@ -164,7 +172,7 @@ function MetricLine({ label, value, tone }) {
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 16, backgroundColor: "rgb(32, 32, 38)", paddingBottom: 20 },
+  container: { gap: 8, backgroundColor: "rgb(32, 32, 38)", paddingBottom: 20 },
   summaryRow: { flexDirection: "row", gap: 12 },
   cardsRow: {
     backgroundColor: "rgb(20, 23, 28)",
@@ -175,12 +183,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     gap: 12,
     padding: 16,
-    borderRadius: 24,
+    borderRadius: 12,
     backgroundColor: "rgb(20, 23, 28)",
     borderWidth: 1,
     borderColor: "#1e293b",
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 18, fontWeight: "700" },
+  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
   metricLine: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -224,6 +232,9 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 10,
     backgroundColor: "#38bdf8",
+  },
+  barFillMax: {
+    backgroundColor: "#fb7185",
   },
   barLabel: {
     color: "#94a3b8",

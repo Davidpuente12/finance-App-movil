@@ -75,8 +75,8 @@ const styles = StyleSheet.create({
   amountPositive: { color: "#34d399" },
   amountNegative: { color: "#fb7185" },
   categoryIcon: {
-    width: 35,
-    height: 35,
+    width: 38,
+    height: 38,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",

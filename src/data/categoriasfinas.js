@@ -12,22 +12,23 @@ const categorias_gastos = [
   {
     name: "Restaurante",
     icon: <MaterialCommunityIcons name="hamburger" size={20} color="white" />,
-    color: "#f16262",
+
+    color: "#ef4444",
   },
   {
     name: "Supermercado",
     icon: <FontAwesome name="shopping-cart" size={20} color="white" />,
-    color: "#ef4444",
+    color: "#f16262",
   },
   {
     name: "Vivienda",
     icon: <Entypo name="home" size={20} color="white" />,
-    color: "#ffac1c",
+    color: "#fba716",
   },
   {
     name: "Servicios",
     icon: <MaterialIcons name="electrical-services" size={20} color="white" />,
-    color: "#e7ab42",
+    color: "#e2ad50",
   },
   {
     name: "Internet",
@@ -37,7 +38,7 @@ const categorias_gastos = [
   {
     name: "Transporte",
     icon: <MaterialIcons name="directions-bus" size={20} color="white" />,
-    color: "#34c9e4",
+    color: "#707475",
   },
   {
     name: "Vehiculo",
@@ -52,7 +53,7 @@ const categorias_gastos = [
   {
     name: "Entretenimiento",
     icon: <Ionicons name="game-controller" size={20} color="white" />,
-    color: "#fa51a6",
+    color: "#3344f8",
   },
   {
     name: "Salud",
@@ -72,7 +73,7 @@ const categorias_gastos = [
   {
     name: "Otros",
     icon: <Entypo name="wallet" size={20} color="white" />,
-    color: "#6b7280",
+    color: "#a1a5ae",
   },
 ];
 

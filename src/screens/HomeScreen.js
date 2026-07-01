@@ -10,10 +10,11 @@ import {
 import { MetricCard } from "../components/MetricCard";
 import { TransactionRow } from "../components/TransactionRow";
 import { ResumenMensualHome } from "../components/ResumenMensualHome";
+import { useNavigation } from "@react-navigation/native";
 
 function HomeScreen({
   loading,
-  recentTransactions,
+  selectedMonthItems,
   balanceTotal,
   totalIngresosMensual,
   totalGastosMensual,
@@ -21,10 +22,14 @@ function HomeScreen({
   openEditModal,
   deleteTransaction,
   openNewModal,
+  filterMonth,
+  filterYear,
 }) {
-  const latestTransactions = [...recentTransactions].sort(
+  const latestTransactions = [...selectedMonthItems].sort(
     (a, b) => new Date(b.fecha) - new Date(a.fecha),
   );
+
+  const navigation = useNavigation();
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
@@ -47,9 +52,11 @@ function HomeScreen({
       </View>
 
       <ResumenMensualHome
-        selectedMonthItems={recentTransactions}
+        selectedMonthItems={selectedMonthItems}
         totalIngresosMensual={totalIngresosMensual}
         totalGastosMensual={totalGastosMensual}
+        filterMonth={filterMonth}
+        filterYear={filterYear}
       />
 
       <View style={styles.section}>
@@ -66,7 +73,7 @@ function HomeScreen({
           </View>
         ) : (
           <View>
-            {latestTransactions.slice(0, 5).length === 0 ? (
+            {latestTransactions.length === 0 ? (
               <EmptyState text="Aún no hay transacciones registradas." />
             ) : (
               latestTransactions
@@ -83,6 +90,13 @@ function HomeScreen({
             )}
           </View>
         )}
+
+        <Pressable
+          onPress={() => navigation.navigate("Registros")}
+          style={styles.sectionFooter}
+        >
+          <Text style={styles.sectionFooterText}>Mostras mas</Text>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -98,8 +112,9 @@ function EmptyState({ text }) {
 
 const styles = StyleSheet.create({
   container: {
+    height: 1150,
     flexGrow: 1,
-    gap: 16,
+    gap: 8,
     backgroundColor: "rgb(32, 32, 38)",
     paddingBottom: 20,
   },
@@ -112,7 +127,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     gap: 12,
     padding: 16,
-    borderRadius: 24,
+    borderRadius: 12,
     backgroundColor: "rgb(20, 23, 28)",
     borderWidth: 1,
     borderColor: "#1e293b",
@@ -122,7 +137,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 17, fontWeight: "700" },
+  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
   sectionMeta: { color: "#94a3b8", fontSize: 12 },
   loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
   loadingText: { color: "#cbd5e1" },
@@ -138,6 +153,17 @@ const styles = StyleSheet.create({
   emptyState: { paddingVertical: 18, alignItems: "center" },
   emptyStateText: { color: "#94a3b8", textAlign: "center" },
   coverageText: { color: "#cbd5e1", lineHeight: 20 },
+
+  sectionFooter: {
+    paddingTop: 15,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  sectionFooterText: {
+    color: "rgb(119, 119, 255)",
+    fontSize: 16,
+    fontWeight: "700",
+  },
 });
 
 export { HomeScreen };

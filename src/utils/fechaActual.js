@@ -1,34 +1,44 @@
-const getTodayDate = () => new Date().toISOString().split("T")[0];
-
-const getMonthTransactions = (items, selectedDate) => {
-  const [year, month] = selectedDate.split("-");
-
-  return items.filter((item) => {
-    const normalizedFecha = item.fecha.includes("-")
-      ? item.fecha
-      : new Date(item.fecha).toISOString().split("T")[0];
-    const [itemYear, itemMonth] = normalizedFecha.split("-");
-
-    return (
-      Number(itemYear) === Number(year) && Number(itemMonth) === Number(month)
-    );
-  });
+const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
-const meses = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-];
-const mesActual = meses[new Date().getMonth()];
+const getCurrentMonth = () => {
+  const mes = new Date().toLocaleString("es-CO", { month: "long" });
+  return mes.charAt(0).toUpperCase() + mes.slice(1);
+};
 
-export { getMonthTransactions, getTodayDate, mesActual };
+const getMonthYearFiltered = (filterMonth, filterYear) => {
+  const month = filterMonth.slice(0, 3).toUpperCase();
+
+  return `${month} ${filterYear}`;
+};
+
+const mesesMap = {
+  Enero: 1,
+  Febrero: 2,
+  Marzo: 3,
+  Abril: 4,
+  Mayo: 5,
+  Junio: 6,
+  Julio: 7,
+  Agosto: 8,
+  Septiembre: 9,
+  Octubre: 10,
+  Noviembre: 11,
+  Diciembre: 12,
+};
+
+const currentYear = new Date().getFullYear();
+const yearsArray = Array.from({ length: 10 }, (_, i) => currentYear - i);
+
+export {
+  getTodayDate,
+  getCurrentMonth,
+  mesesMap,
+  getMonthYearFiltered,
+  yearsArray,
+};

@@ -3,11 +3,14 @@ import Svg, { Circle } from "react-native-svg";
 import { StyleSheet, Text, View } from "react-native";
 import { formatearMonto } from "../utils/formatearMonto";
 import { categorias_gastos } from "../data/categoriasfinas";
+import { getMonthYearFiltered } from "../utils/fechaActual";
 
 function ResumenMensual({
   selectedMonthItems,
   totalIngresosMensual,
   totalGastosMensual,
+  filterMonth,
+  filterYear,
 }) {
   const monthExpenseCategories = useMemo(() => {
     const expenses = selectedMonthItems.filter((item) => item.tipo === "gasto");
@@ -45,10 +48,18 @@ function ResumenMensual({
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Resumen mensual</Text>
-      <Text style={styles.description}>
-        {selectedMonthItems.length} movimientos en el mes seleccionado.
-      </Text>
+      <View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={styles.sectionTitle}>Resumen mensual</Text>
+          <Text style={styles.sectionDate}>
+            {getMonthYearFiltered(filterMonth, filterYear)}
+          </Text>
+        </View>
+
+        <Text style={styles.description}>
+          {selectedMonthItems.length} movimientos en el mes seleccionado.
+        </Text>
+      </View>
 
       <View style={styles.monthSummaryRow}>
         <View style={styles.donutWrap}>
@@ -150,13 +161,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     gap: 12,
     padding: 16,
-    borderRadius: 24,
+    paddingBottom: 26,
+    borderRadius: 12,
     backgroundColor: "rgb(20, 23, 28)",
     borderWidth: 1,
     borderColor: "#1e293b",
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 18, fontWeight: "700" },
-  description: { color: "#cbd5e1", lineHeight: 20 },
+  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
+  description: { color: "#cbd5e1", lineHeight: 20, marginTop: 5 },
+  sectionDate: { color: "#cbd5e1", fontSize: 16, marginTop: 5 },
   monthSummaryRow: {
     gap: 14,
   },
@@ -188,6 +201,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 12,
     borderBottomWidth: 1,
+    borderColor: "rgb(32, 32, 38)",
   },
   legendLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   legendText: { color: "white", flexShrink: 1, fontSize: 17 },

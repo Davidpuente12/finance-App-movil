@@ -16,7 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.4.8",
     "@react-navigation/material-top-tabs": "^7.6.2",
     "@react-navigation/native": "^7.1.17",
-    "expo": "~56.0.12",
+    "expo": "~56.0.13",
     "expo-font": "~56.0.7",
     "expo-sqlite": "~56.0.5",
     "expo-status-bar": "~56.0.4",
@@ -31,6 +31,5 @@
   },
   "devDependencies": {
     "@babel/core": "^7.28.5"
-  },
-  "homepage": "https://Davidpuente12.github.io/finance-App"
+  }
 }

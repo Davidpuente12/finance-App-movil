@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { TransactionRow } from "../components/TransactionRow";
 import { categoriasGasto, categoriasIngreso } from "../data/categorias";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
+import { mesesMap, yearsArray } from "../utils/fechaActual";
 
 function RecordsScreen({
   loading,
@@ -19,33 +19,26 @@ function RecordsScreen({
   allFilteredTransactions,
   searchQuery,
   setSearchQuery,
-  filterDate,
-  setFilterDate,
-  getTodayDate,
   openEditModal,
   openNewModal,
-  formFecha,
-  // filtro meses
+  // filtro fecha
+  filterYear,
+  setFilterYear,
   filterMonth,
   setFilterMonth,
-  mesesMap,
 }) {
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showMonthModal, setShowMonthModal] = useState(false);
-
-  const handleSelectMonth = (mes) => {
-    setFilterMonth(mes);
-    const mesNumero = mesesMap[mes];
-    const mesStr = String(mesNumero).padStart(2, "0");
-    setFilterDate(`${yearActual}-${mesStr}`);
-    setShowMonthModal(false);
-  };
+  const [showYearModal, setShowYearModal] = useState(false);
 
   const mesesArray = Object.keys(mesesMap);
-  const yearActual = new Date().getFullYear();
+
+  const handleSelectYear = (year) => {
+    setFilterYear(year.toString());
+    setShowYearModal(false);
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
       <View>
         <View style={styles.sectionHeaderPrincipal}>
           <Pressable
@@ -74,7 +67,10 @@ function RecordsScreen({
                     <Pressable
                       key={mes}
                       style={styles.gridItem}
-                      onPress={() => handleSelectMonth(mes)}
+                      onPress={() => {
+                        setFilterMonth(mes);
+                        setShowMonthModal(false);
+                      }}
                     >
                       <Text style={styles.gridItemText}>{mes}</Text>
                     </Pressable>
@@ -85,34 +81,41 @@ function RecordsScreen({
           </Modal>
 
           <Pressable
-            onPress={() => setShowDatePicker(true)}
+            onPress={() => setShowYearModal(true)}
             style={styles.dateButton}
           >
             <Text style={styles.inputDateText}>
-              {filterDate || "Fecha YYYY-MM-DD"}
+              {filterYear || "Selecciona año"}
             </Text>
           </Pressable>
 
-          {showDatePicker && (
-            <DateTimePicker
-              value={filterDate ? new Date(filterDate) : new Date()}
-              mode="date"
-              display="default"
-              onValueChange={(event, selectedDate) => {
-                if (selectedDate) {
-                  const isoDate = selectedDate.toISOString().split("T")[0];
-                  setFilterDate(isoDate);
+          <Modal visible={showYearModal} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalContentHeader}>
+                  <Text style={styles.modalTitle}>Selecciona un año</Text>
+                  <Pressable
+                    style={styles.closeButton}
+                    onPress={() => setShowYearModal(false)}
+                  >
+                    <Text style={styles.closeButtonText}>⨉</Text>
+                  </Pressable>
+                </View>
 
-                  // sincronizar el Picker de meses
-                  const mesNumero = selectedDate.getMonth();
-                  const mesNombre = Object.keys(mesesMap)[mesNumero];
-                  setFilterMonth(mesNombre);
-                }
-                setShowDatePicker(false);
-              }}
-              onDismiss={() => setShowDatePicker(false)}
-            />
-          )}
+                <ScrollView style={{ maxHeight: 300 }}>
+                  {yearsArray.map((year) => (
+                    <Pressable
+                      key={year}
+                      style={styles.gridItem}
+                      onPress={() => handleSelectYear(year)}
+                    >
+                      <Text style={styles.gridItemText}>{year}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </View>
 
         <View style={styles.filters}>
@@ -129,7 +132,9 @@ function RecordsScreen({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Resultados</Text>
-          <Text style={styles.sectionMeta}>{lista.length} movimientos</Text>
+          <Text style={styles.sectionMeta}>
+            {allFilteredTransactions.length} movimientos
+          </Text>
         </View>
 
         <FlatList
@@ -164,10 +169,11 @@ function EmptyState({ text }) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: " rgb(32, 32, 38)",
   },
   section: {
+    flex: 1,
     gap: 12,
     padding: 16,
     backgroundColor: " rgb(20, 23, 28)",

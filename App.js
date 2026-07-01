@@ -1,14 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { useTransactions } from "./src/hook/useTransactions";
 import { formatearMonto } from "./src/utils/formatearMonto.js";
 import {
-  getMonthTransactions,
   getTodayDate,
-  mesActual,
+  getCurrentMonth,
+  mesesMap,
 } from "./src/utils/fechaActual";
 import { categoriasGasto, categoriasIngreso } from "./src/data/categorias";
 import { HomeScreen } from "./src/screens/HomeScreen";
@@ -17,26 +16,37 @@ import { StatsScreen } from "./src/screens/StatsScreen";
 import { TransactionModal } from "./src/components/TransactionModal";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { useSQLiteTransactions } from "./src/hook/useSQLiteTransactions.js";
 
 const Tab = createMaterialTopTabNavigator();
 
-const createTransaction = (transaction, editingId) => ({
-  ...transaction,
-  id: editingId ?? Date.now(),
-});
+const normalizeFecha = (fecha) => {
+  if (typeof fecha !== "string") return "";
+  const date = new Date(fecha);
+  if (Number.isNaN(date.getTime())) {
+    const onlyDate = fecha.trim().split(" ")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(onlyDate)) return onlyDate;
+    return "";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function App() {
-  const { lista, setLista, loading } = useTransactions(
-    "transacciones_finance_APP",
-    [],
-  );
+  const { lista, saveTransaction, deleteTransaction, loading } =
+    useSQLiteTransactions();
+
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   // filtros
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("todos");
-  const [filterDate, setFilterDate] = useState(getTodayDate());
-  const [filterMonth, setFilterMonth] = useState(mesActual);
+  const [filterMonth, setFilterMonth] = useState(() => getCurrentMonth());
+  const [filterYear, setFilterYear] = useState(
+    new Date().getFullYear().toString(),
+  );
+
   // valores del formulario
   const [formType, setFormType] = useState("gasto");
   const [formMonto, setFormMonto] = useState("");
@@ -44,10 +54,21 @@ export default function App() {
   const [formDescripcion, setFormDescripcion] = useState("");
   const [formFecha, setFormFecha] = useState(getTodayDate());
 
-  const selectedMonthItems = useMemo(
-    () => getMonthTransactions(lista, filterDate),
-    [lista, filterDate],
-  );
+  const selectedMonthItems = useMemo(() => {
+    return lista.filter((item) => {
+      const itemFecha = /^\d{4}-\d{2}-\d{2}$/.test(item.fecha)
+        ? item.fecha
+        : normalizeFecha(item.fecha);
+
+      const [itemYear, itemMonth] = itemFecha.split("-");
+
+      const matchYear = Number(itemYear) === Number(filterYear);
+
+      const mesNumero = mesesMap[filterMonth]; // Enero=1, Febrero=2...
+      const matchMonth = mesNumero ? Number(itemMonth) === mesNumero : true;
+      return matchYear && matchMonth;
+    });
+  }, [lista, filterYear, filterMonth]);
 
   // Balance, ingresos y gastos
   const totalGastosMensual = useMemo(
@@ -68,23 +89,6 @@ export default function App() {
 
   const balanceTotal = totalIngresosMensual - totalGastosMensual;
 
-  // Filtros
-
-  const mesesMap = {
-    Enero: 1,
-    Febrero: 2,
-    Marzo: 3,
-    Abril: 4,
-    Mayo: 5,
-    Junio: 6,
-    Julio: 7,
-    Agosto: 8,
-    Septiembre: 9,
-    Octubre: 10,
-    Noviembre: 11,
-    Diciembre: 12,
-  };
-
   const allFilteredTransactions = useMemo(() => {
     return [...lista]
       .filter((item) => {
@@ -97,37 +101,31 @@ export default function App() {
           categoria.includes(normalizedQuery) ||
           descripcion.includes(normalizedQuery);
 
-        const matchDate = (() => {
-          if (!filterDate) return true;
-
-          const [year, month] = filterDate.split("-");
-          const itemFecha = item.fecha.includes("-")
+        const matchYear = (() => {
+          if (!filterYear) return true;
+          const itemFecha = /^\d{4}-\d{2}-\d{2}$/.test(item.fecha)
             ? item.fecha
-            : new Date(item.fecha).toISOString().split("T")[0];
-
-          const [itemYear, itemMonth] = itemFecha.split("-");
-
-          return (
-            Number(itemYear) === Number(year) &&
-            Number(itemMonth) === Number(month)
-          );
+            : normalizeFecha(item.fecha);
+          const [itemYear] = itemFecha.split("-");
+          return Number(itemYear) === Number(filterYear);
         })();
 
         const matchMonth = (() => {
           if (!filterMonth) return true;
-          const mesNumero = mesesMap[filterMonth.toLowerCase()];
+          const mesNumero = mesesMap[filterMonth];
+
           if (!mesNumero) return true;
-          const itemFecha = item.fecha.includes("-")
+          const itemFecha = /^\d{4}-\d{2}-\d{2}$/.test(item.fecha)
             ? item.fecha
-            : new Date(item.fecha).toISOString().split("T")[0];
+            : normalizeFecha(item.fecha);
           const [, itemMonth] = itemFecha.split("-");
           return Number(itemMonth) === mesNumero;
         })();
 
-        return matchSearch && matchDate && matchMonth;
+        return matchSearch && matchYear && matchMonth;
       })
       .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-  }, [lista, searchQuery, filterDate, filterMonth]);
+  }, [lista, searchQuery, filterMonth, filterYear]);
 
   const openNewModal = () => {
     setEditingTransaction(null);
@@ -152,43 +150,6 @@ export default function App() {
   const closeModal = () => {
     setModalVisible(false);
     setEditingTransaction(null);
-  };
-
-  const saveTransaction = () => {
-    const monto = Number(formMonto);
-    if (!formCategoria || !formFecha || Number.isNaN(monto) || monto <= 0) {
-      return;
-    }
-
-    const payload = createTransaction(
-      {
-        tipo: formType,
-        monto,
-        categoria: formCategoria.trim(),
-        descripcion: formDescripcion.trim() || undefined,
-        fecha: formFecha,
-      },
-      editingTransaction?.id,
-    );
-
-    setLista((current) => {
-      if (editingTransaction) {
-        return current.map((item) =>
-          item.id === editingTransaction.id ? payload : item,
-        );
-      }
-
-      return [...current, payload];
-    });
-
-    closeModal();
-  };
-
-  const deleteTransaction = (id) => {
-    setLista((current) => current.filter((item) => item.id !== id));
-    if (editingTransaction?.id === id) {
-      closeModal();
-    }
   };
 
   const categories = formType === "gasto" ? categoriasGasto : categoriasIngreso;
@@ -225,13 +186,15 @@ export default function App() {
                   <HomeScreen
                     loading={loading}
                     lista={lista}
-                    recentTransactions={selectedMonthItems}
+                    selectedMonthItems={selectedMonthItems}
                     balanceTotal={balanceTotal}
                     totalIngresosMensual={totalIngresosMensual}
                     totalGastosMensual={totalGastosMensual}
                     formatearMonto={formatearMonto}
                     openEditModal={openEditModal}
                     openNewModal={openNewModal}
+                    filterMonth={filterMonth}
+                    filterYear={filterYear}
                   />
                 )}
               </Tab.Screen>
@@ -244,16 +207,13 @@ export default function App() {
                     allFilteredTransactions={allFilteredTransactions}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
-                    filterDate={filterDate}
-                    setFilterDate={setFilterDate}
-                    getTodayDate={getTodayDate}
                     openEditModal={openEditModal}
                     openNewModal={openNewModal}
-                    formFecha={formFecha}
                     // filtro meses
                     filterMonth={filterMonth}
                     setFilterMonth={setFilterMonth}
-                    mesesMap={mesesMap}
+                    filterYear={filterYear}
+                    setFilterYear={setFilterYear}
                   />
                 )}
               </Tab.Screen>
@@ -267,6 +227,8 @@ export default function App() {
                     totalGastosMensual={totalGastosMensual}
                     balanceTotal={balanceTotal}
                     formatearMonto={formatearMonto}
+                    filterMonth={filterMonth}
+                    filterYear={filterYear}
                   />
                 )}
               </Tab.Screen>
