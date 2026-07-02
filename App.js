@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -9,7 +9,6 @@ import {
   getCurrentMonth,
   mesesMap,
 } from "./src/utils/fechaActual";
-import { categoriasGasto, categoriasIngreso } from "./src/data/categorias";
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { RecordsScreen } from "./src/screens/RecordsScreen";
 import { StatsScreen } from "./src/screens/StatsScreen";
@@ -152,8 +151,6 @@ export default function App() {
     setEditingTransaction(null);
   };
 
-  const categories = formType === "gasto" ? categoriasGasto : categoriasIngreso;
-
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
@@ -250,7 +247,6 @@ export default function App() {
               setFormDescripcion={setFormDescripcion}
               formFecha={formFecha}
               setFormFecha={setFormFecha}
-              categories={categories}
             />
 
             <Pressable style={styles.fab} onPress={openNewModal}>

@@ -9,18 +9,15 @@ import {
   Modal,
 } from "react-native";
 import { TransactionRow } from "../components/TransactionRow";
-import { categoriasGasto, categoriasIngreso } from "../data/categorias";
 import { useState } from "react";
 import { mesesMap, yearsArray } from "../utils/fechaActual";
 
 function RecordsScreen({
   loading,
-  lista,
   allFilteredTransactions,
   searchQuery,
   setSearchQuery,
   openEditModal,
-  openNewModal,
   // filtro fecha
   filterYear,
   setFilterYear,

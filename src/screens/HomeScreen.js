@@ -21,7 +21,6 @@ function HomeScreen({
   formatearMonto,
   openEditModal,
   deleteTransaction,
-  openNewModal,
   filterMonth,
   filterYear,
 }) {

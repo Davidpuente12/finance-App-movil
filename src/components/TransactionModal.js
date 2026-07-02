@@ -35,8 +35,6 @@ function TransactionModal({
   setFormDescripcion,
   formFecha,
   setFormFecha,
-  //
-  categories,
 }) {
   const montoFormat = formMonto ? formatearMonto(Number(formMonto)) : "";
   function handleMontoChange(text) {
