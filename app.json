@@ -5,14 +5,22 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./src/assets/icon-wallet.png",
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./src/assets/icon-wallet.png",
         "backgroundColor": "#081120"
-      }
+      },
+      "package": "com.david_12_1995.wallet"
     },
     "plugins": [
       "expo-font",
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "797f13ef-c8d1-42c0-bff2-51ba95e6ae40"
+      }
+    }
   }
 }

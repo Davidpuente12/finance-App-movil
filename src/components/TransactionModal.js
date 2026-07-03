@@ -45,8 +45,8 @@ function TransactionModal({
   const [selectedMonto, setSelectedMonto] = useState(false);
   const [selectedDescription, setSelectedDescription] = useState(false);
 
-  const typeOfTransaction =
-    formType === "gasto" ? categorias_gastos : categorias_ingresos;
+  // const typeOfTransaction =
+  //   formType === "gasto" ? categorias_gastos : categorias_ingresos;
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   function handleSave() {
@@ -143,36 +143,64 @@ function TransactionModal({
           >
             <Text style={styles.labelCategories}>Categorias</Text>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesList}
-              style={{ maxHeight: 120 }}
-            >
-              {typeOfTransaction.map((item, index) => (
-                <View key={index}>
-                  <Pressable
-                    onPress={() => {
-                      setFormCategoria(item.name);
-                    }}
-                    style={[
-                      styles.categoryItem,
-                      { backgroundColor: item.color },
-                      formCategoria === item.name && styles.categoryItemActive,
-                    ]}
-                  >
-                    <View>{item.icon}</View>
-                  </Pressable>
-                  <Text style={styles.categoryText}>
-                    {item.name.length > 6
-                      ? item.name.slice(0, 5) + "…"
-                      : item.name}
-                  </Text>
-                </View>
-              ))}
-            </ScrollView>
+            {formType === "gasto" ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesList}
+                style={{ maxHeight: 120 }}
+              >
+                {categorias_gastos.map((item, index) => (
+                  <View key={index}>
+                    <Pressable
+                      onPress={() => {
+                        setFormCategoria(item.name);
+                      }}
+                      style={[
+                        styles.categoryItem,
+                        { backgroundColor: item.color },
+                        formCategoria === item.name &&
+                          styles.categoryItemActive,
+                      ]}
+                    >
+                      <View>{item.icon}</View>
+                    </Pressable>
+                    <Text style={styles.categoryText}>
+                      {item.name.length > 6
+                        ? item.name.slice(0, 5) + "…"
+                        : item.name}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.categoriesList}>
+                {categorias_ingresos.map((item, index) => (
+                  <View key={index}>
+                    <Pressable
+                      onPress={() => {
+                        setFormCategoria(item.name);
+                      }}
+                      style={[
+                        styles.categoryItem,
+                        { backgroundColor: item.color },
+                        formCategoria === item.name &&
+                          styles.categoryItemActive,
+                      ]}
+                    >
+                      <View>{item.icon}</View>
+                    </Pressable>
+                    <Text style={styles.categoryText}>
+                      {item.name.length > 6
+                        ? item.name.slice(0, 5) + "…"
+                        : item.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
 
-            <ScrollView>
+            <View>
               <TextInput
                 style={[
                   styles.input,
@@ -251,7 +279,7 @@ function TransactionModal({
                   onDismiss={() => setShowDatePicker(false)}
                 />
               )}
-            </ScrollView>
+            </View>
           </KeyboardAvoidingView>
         </View>
       </View>
@@ -264,6 +292,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(25, 25, 25, 0.72)",
     justifyContent: "flex-end",
+    marginTop: 50,
   },
   modalCard: {
     flex: 1,

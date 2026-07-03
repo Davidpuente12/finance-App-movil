@@ -260,7 +260,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "rgb(32, 32, 38)" },
+  safeArea: { flex: 1, backgroundColor: "rgb(79, 57, 246,0.2)" },
   tabBarTop: {
     backgroundColor: "rgb(79, 57, 246)",
     borderBottomWidth: 1,
