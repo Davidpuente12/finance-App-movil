@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { formatearMonto } from "./src/utils/formatearMonto.js";
+import { normalizeFecha } from "./src/utils/normalizeFecha.js";
 import {
   getTodayDate,
   getCurrentMonth,
@@ -16,24 +17,32 @@ import { TransactionModal } from "./src/components/TransactionModal";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useSQLiteTransactions } from "./src/hook/useSQLiteTransactions.js";
+import { SQLiteProvider } from "expo-sqlite";
 
 const Tab = createMaterialTopTabNavigator();
 
-const normalizeFecha = (fecha) => {
-  if (typeof fecha !== "string") return "";
-  const date = new Date(fecha);
-  if (Number.isNaN(date.getTime())) {
-    const onlyDate = fecha.trim().split(" ")[0];
-    if (/^\d{4}-\d{2}-\d{2}$/.test(onlyDate)) return onlyDate;
-    return "";
-  }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+async function initializeDatabase(db) {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS transacciones (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tipo TEXT NOT NULL,
+      monto REAL NOT NULL,
+      categoria TEXT,
+      descripcion TEXT,
+      fecha TEXT NOT NULL
+    );
+  `);
+}
 
 export default function App() {
+  return (
+    <SQLiteProvider databaseName="finanzas.db" onInit={initializeDatabase}>
+      <AppContent />
+    </SQLiteProvider>
+  );
+}
+
+function AppContent() {
   const { lista, saveTransaction, deleteTransaction, loading } =
     useSQLiteTransactions();
 
@@ -48,8 +57,8 @@ export default function App() {
 
   // valores del formulario
   const [formType, setFormType] = useState("gasto");
-  const [formMonto, setFormMonto] = useState("");
   const [formCategoria, setFormCategoria] = useState("");
+  const [formMonto, setFormMonto] = useState("");
   const [formDescripcion, setFormDescripcion] = useState("");
   const [formFecha, setFormFecha] = useState(getTodayDate());
 
@@ -84,6 +93,16 @@ export default function App() {
         .filter((item) => item.tipo === "ingreso")
         .reduce((acu, item) => acu + item.monto, 0),
     [selectedMonthItems],
+  );
+
+  const saldoDisponible = useMemo(
+    () =>
+      lista.reduce((acu, item) => {
+        if (item.tipo === "ingreso") return acu + item.monto;
+        if (item.tipo === "gasto") return acu - item.monto;
+        return acu;
+      }, 0),
+    [lista],
   );
 
   const balanceTotal = totalIngresosMensual - totalGastosMensual;
@@ -123,7 +142,7 @@ export default function App() {
 
         return matchSearch && matchYear && matchMonth;
       })
-      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      .sort((a, b) => (b.fecha > a.fecha ? 1 : b.fecha < a.fecha ? -1 : 0));
   }, [lista, searchQuery, filterMonth, filterYear]);
 
   const openNewModal = () => {
@@ -140,7 +159,7 @@ export default function App() {
     setEditingTransaction(item);
     setFormType(item.tipo);
     setFormMonto(String(item.monto));
-    setFormCategoria(item.categoria);
+    setFormCategoria(item.categoria ?? "");
     setFormDescripcion(item.descripcion ?? "");
     setFormFecha(item.fecha);
     setModalVisible(true);
@@ -187,6 +206,7 @@ export default function App() {
                     balanceTotal={balanceTotal}
                     totalIngresosMensual={totalIngresosMensual}
                     totalGastosMensual={totalGastosMensual}
+                    saldoDisponible={saldoDisponible}
                     formatearMonto={formatearMonto}
                     openEditModal={openEditModal}
                     openNewModal={openNewModal}
@@ -260,7 +280,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "rgb(79, 57, 246,0.2)" },
+  safeArea: { flex: 1, backgroundColor: "rgba(79, 57, 246,0.2)" },
   tabBarTop: {
     backgroundColor: "rgb(79, 57, 246)",
     borderBottomWidth: 1,

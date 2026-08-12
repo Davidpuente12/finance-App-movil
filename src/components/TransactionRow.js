@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, Dimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { formatearMonto } from "../utils/formatearMonto";
 import {
   categorias_gastos,
@@ -9,14 +9,14 @@ import Entypo from "@expo/vector-icons/Entypo";
 const getCategoryIcon = (categoria, tipo) => {
   let cat;
 
-  if (tipo === "gasto") {
-    cat = categorias_gastos.find(
-      (cat) => cat.name.toLowerCase() === categoria.toLowerCase(),
-    );
-  } else if (tipo === "ingreso") {
-    cat = categorias_ingresos.find(
-      (cat) => cat.name.toLowerCase() === categoria.toLowerCase(),
-    );
+  if (categoria) {
+    const lista =
+      tipo === "gasto"
+        ? categorias_gastos
+        : tipo === "ingreso"
+          ? categorias_ingresos
+          : [];
+    cat = lista.find((c) => c.name.toLowerCase() === categoria.toLowerCase());
   }
 
   return (
@@ -26,7 +26,7 @@ const getCategoryIcon = (categoria, tipo) => {
         { backgroundColor: cat?.color || "transparent" },
       ]}
     >
-      {cat ? cat.icon : <Entypo name="wallet" size={20} color="black" />}
+      {cat ? cat.icon : <Entypo name="wallet" size={20} color="white" />}
     </View>
   );
 };

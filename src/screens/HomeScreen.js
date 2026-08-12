@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 
-import { MetricCard } from "../components/MetricCard";
+import { Balance } from "../components/Balance";
 import { TransactionRow } from "../components/TransactionRow";
 import { ResumenMensualHome } from "../components/ResumenMensualHome";
 import { useNavigation } from "@react-navigation/native";
@@ -18,6 +18,7 @@ function HomeScreen({
   balanceTotal,
   totalIngresosMensual,
   totalGastosMensual,
+  saldoDisponible,
   formatearMonto,
   openEditModal,
   deleteTransaction,
@@ -31,38 +32,29 @@ function HomeScreen({
   const navigation = useNavigation();
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
-      <View style={styles.cardsRow}>
-        <MetricCard
-          label="Balance"
-          value={formatearMonto(balanceTotal)}
-          tone="primary"
-        />
-        <MetricCard
-          label="Ingresos"
-          value={formatearMonto(totalIngresosMensual)}
-          tone="green"
-        />
-        <MetricCard
-          label="Gastos"
-          value={formatearMonto(totalGastosMensual)}
-          tone="red"
-        />
-      </View>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      <Balance
+        balanceTotal={balanceTotal}
+        totalIngresosMensual={totalIngresosMensual}
+        totalGastosMensual={totalGastosMensual}
+        saldoDisponible={saldoDisponible}
+        filterMonth={filterMonth}
+        filterYear={filterYear}
+      />
 
       <ResumenMensualHome
         selectedMonthItems={selectedMonthItems}
         totalIngresosMensual={totalIngresosMensual}
         totalGastosMensual={totalGastosMensual}
-        filterMonth={filterMonth}
-        filterYear={filterYear}
       />
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            Resumen de los últimos registros
-          </Text>
+          <Text style={styles.sectionTitle}>Últimos registros</Text>
         </View>
 
         {loading ? (
@@ -111,16 +103,10 @@ function EmptyState({ text }) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 1150,
     flexGrow: 1,
-    gap: 8,
+    gap: 7,
     backgroundColor: "rgb(32, 32, 38)",
-    paddingBottom: 20,
-  },
-  cardsRow: {
-    backgroundColor: "rgb(20, 23, 28)",
-    flexDirection: "row",
-    padding: 10,
+    paddingBottom: 80,
   },
   section: {
     marginHorizontal: 10,
@@ -135,23 +121,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 5,
   },
-  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
+  sectionTitle: { color: "white", fontSize: 18, fontWeight: "500" },
   sectionMeta: { color: "#94a3b8", fontSize: 12 },
   loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
   loadingText: { color: "#cbd5e1" },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    alignItems: "center",
-  },
-  secondaryButtonText: { color: "#e2e8f0", fontWeight: "600" },
+
   emptyState: { paddingVertical: 18, alignItems: "center" },
   emptyStateText: { color: "#94a3b8", textAlign: "center" },
-  coverageText: { color: "#cbd5e1", lineHeight: 20 },
 
   sectionFooter: {
     paddingTop: 15,

@@ -43,41 +43,36 @@ function StatsScreen({
   filterYear,
 }) {
   const annualExpenseByMonth = useMemo(() => {
-    const currentYear = new Date().getFullYear();
+    const targetYear = Number(filterYear) || new Date().getFullYear();
     const totals = Array.from({ length: 12 }, () => 0);
 
     lista.forEach((item) => {
-      if (item.tipo !== "gasto") {
-        return;
-      }
-
-      const date = new Date(item.fecha);
-      if (date.getFullYear() !== currentYear) {
-        return;
-      }
-
-      totals[date.getMonth()] += item.monto;
+      if (item.tipo !== "gasto") return;
+      const [year, month] = item.fecha.split("-").map(Number);
+      if (year !== targetYear) return;
+      totals[month - 1] += item.monto;
     });
 
     return totals;
-  }, [lista]);
+  }, [lista, filterYear]);
 
   const annualExpenseTotal = useMemo(
     () => annualExpenseByMonth.reduce((sum, value) => sum + value, 0),
     [annualExpenseByMonth],
   );
 
-  const maxAnnualExpense = Math.max(...annualExpenseByMonth, 1);
-  const maxIndex = annualExpenseByMonth.indexOf(maxAnnualExpense);
+  const hasData = annualExpenseByMonth.some((v) => v > 0);
+  const maxAnnualExpense = hasData ? Math.max(...annualExpenseByMonth) : 0;
+  const maxIndex = hasData
+    ? annualExpenseByMonth.indexOf(maxAnnualExpense)
+    : -1;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.cardsRow}>
-        <MetricCard
-          label="Balance"
-          value={formatearMonto(balanceTotal)}
-          tone="primary"
-        />
         <MetricCard
           label="Ingresos"
           value={formatearMonto(totalIngresosMensual)}
@@ -87,6 +82,11 @@ function StatsScreen({
           label="Gastos"
           value={formatearMonto(totalGastosMensual)}
           tone="red"
+        />
+        <MetricCard
+          label="Balance"
+          value={formatearMonto(balanceTotal)}
+          tone="primary"
         />
       </View>
 

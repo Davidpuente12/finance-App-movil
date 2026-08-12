@@ -4,14 +4,11 @@ import { StyleSheet, Text, View, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { formatearMonto } from "../utils/formatearMonto";
 import { categorias_gastos } from "../data/categoriasfinas";
-import { getMonthYearFiltered } from "../utils/fechaActual";
 
 function ResumenMensualHome({
   selectedMonthItems,
   totalIngresosMensual,
   totalGastosMensual,
-  filterMonth,
-  filterYear,
 }) {
   const monthExpenseCategories = useMemo(() => {
     const expenses = selectedMonthItems.filter((item) => item.tipo === "gasto");
@@ -51,38 +48,31 @@ function ResumenMensualHome({
 
   return (
     <View style={styles.section}>
-      <View>
-        <View>
-          <Text style={styles.sectionTitle}>Resumen mensual</Text>
-          <Text style={styles.sectionDate}>
-            {getMonthYearFiltered(filterMonth, filterYear)}
-          </Text>
-        </View>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Resumen mensual</Text>
       </View>
 
-      <View style={styles.monthSummaryRow}>
-        <View style={styles.donutWrap}>
-          <Svg width={250} height={250} viewBox="0 0 180 180">
-            <Circle
-              cx="90"
-              cy="90"
-              r="62"
-              fill="transparent"
-              stroke="#1e293b"
-              strokeWidth="20"
-            />
-            <DonutSlices
-              data={monthExpenseCategories}
-              total={totalGastosMensual}
-            />
-          </Svg>
+      <View style={styles.donutWrap}>
+        <Svg width={250} height={250} viewBox="0 0 180 180">
+          <Circle
+            cx="90"
+            cy="90"
+            r="62"
+            fill="transparent"
+            stroke="#1e293b"
+            strokeWidth="20"
+          />
+          <DonutSlices
+            data={monthExpenseCategories}
+            total={totalGastosMensual}
+          />
+        </Svg>
 
-          <View style={styles.donutCenter}>
-            <Text style={styles.donutLabel}>Gastos</Text>
-            <Text style={styles.donutValue}>
-              {formatearMonto(totalGastosMensual)}
-            </Text>
-          </View>
+        <View style={styles.donutCenter}>
+          <Text style={styles.donutLabel}>Gastos</Text>
+          <Text style={styles.donutValue}>
+            {formatearMonto(totalGastosMensual)}
+          </Text>
         </View>
       </View>
 
@@ -92,7 +82,7 @@ function ResumenMensualHome({
             No hay gastos en el mes seleccionado.
           </Text>
         ) : (
-          monthExpenseCategories.slice(0, 4).map((item) => (
+          monthExpenseCategories.map((item) => (
             <View key={item.category} style={styles.legendItem}>
               <View style={styles.legendLeft}>
                 <Text
@@ -159,11 +149,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#1e293b",
   },
-  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
-  sectionDate: { color: "#cbd5e1", fontSize: 16, marginTop: 5 },
-  monthSummaryRow: {
-    gap: 14,
-  },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between" },
+  sectionTitle: { color: "white", fontSize: 18, fontWeight: "500" },
+  sectionDate: { color: "#cbd5e1", fontSize: 16 },
+
+  // Donut
   donutWrap: {
     alignItems: "center",
     justifyContent: "center",
@@ -176,28 +166,37 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
   },
-  donutLabel: { color: "#cbd5e1", fontSize: 13, marginBottom: 4 },
+  donutLabel: { color: "#cbd5e1", fontSize: 14, marginBottom: 4 },
   donutValue: {
-    color: "#f8fafc",
+    color: "white",
     fontSize: 17,
-    fontWeight: "800",
+    fontWeight: "600",
     textAlign: "center",
   },
-  legendList: { gap: 5, marginTop: 4, flexDirection: "row" },
+
+  // legendList
+
+  legendList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    columnGap: 10,
+  },
   emptyText: { color: "#94a3b8", paddingVertical: 6 },
   legendItem: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
   },
-  legendLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  legendText: { color: "white", flexShrink: 1, fontSize: 13 },
+  legendLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  legendText: { color: "#cbd5e1", flexShrink: 1, fontSize: 13 },
   legendPoint: { width: 7, height: 7, borderRadius: 10 },
-  legendAmount: { color: "#f8fafc", fontWeight: "700", fontSize: 15 },
-  negative: { color: "#fb7185", fontSize: 15 },
-  neutral: { color: "#7dd3fc" },
 
+  // Footer
   sectionFooter: {
     borderTopWidth: 1,
     borderColor: "#1e293b",

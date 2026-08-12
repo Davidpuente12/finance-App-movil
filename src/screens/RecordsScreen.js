@@ -35,7 +35,11 @@ function RecordsScreen({
   };
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       <View>
         <View style={styles.sectionHeaderPrincipal}>
           <Pressable
@@ -134,7 +138,25 @@ function RecordsScreen({
           </Text>
         </View>
 
-        <FlatList
+        {allFilteredTransactions.length === 0 ? (
+          <EmptyState
+            text={
+              loading
+                ? "Cargando datos..."
+                : "No hay resultados con esos filtros."
+            }
+          />
+        ) : (
+          allFilteredTransactions.map((item) => (
+            <TransactionRow
+              key={String(item.id)}
+              item={item}
+              onEdit={() => openEditModal(item)}
+            />
+          ))
+        )}
+
+        {/* <FlatList
           data={allFilteredTransactions}
           keyExtractor={(item) => String(item.id)}
           scrollEnabled={false}
@@ -150,7 +172,7 @@ function RecordsScreen({
           renderItem={({ item }) => (
             <TransactionRow item={item} onEdit={() => openEditModal(item)} />
           )}
-        />
+        /> */}
       </View>
     </ScrollView>
   );
@@ -167,13 +189,13 @@ function EmptyState({ text }) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: " rgb(32, 32, 38)",
+    backgroundColor: "rgb(32, 32, 38)",
   },
   section: {
     flex: 1,
-    gap: 12,
+    gap: 4,
     padding: 16,
-    backgroundColor: " rgb(20, 23, 28)",
+    backgroundColor: "rgb(20, 23, 28)",
   },
   sectionHeader: {
     flexDirection: "row",
@@ -190,7 +212,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     color: "#f8fafc",
     fontSize: 17,
-    backgroundColor: " rgb(20, 23, 28)",
+    backgroundColor: "rgb(20, 23, 28)",
   },
   emptyState: { paddingVertical: 18, alignItems: "center" },
   emptyStateText: { color: "#94a3b8", textAlign: "center" },
@@ -229,7 +251,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: " rgb(32, 32, 38)",
+    backgroundColor: "rgb(32, 32, 38)",
     borderRadius: 12,
     padding: 16,
   },
@@ -262,7 +284,7 @@ const styles = StyleSheet.create({
   },
   gridItemText: {
     fontSize: 17,
-    color: " rgb(119, 119, 255)",
+    color: "rgb(119, 119, 255)",
     fontWeight: "700",
   },
 });
