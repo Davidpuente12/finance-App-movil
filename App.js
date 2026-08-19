@@ -142,7 +142,13 @@ function AppContent() {
 
         return matchSearch && matchYear && matchMonth;
       })
-      .sort((a, b) => (b.fecha > a.fecha ? 1 : b.fecha < a.fecha ? -1 : 0));
+      .sort((a, b) => {
+        const fechaA = normalizeFecha(a.fecha);
+        const fechaB = normalizeFecha(b.fecha);
+
+        if (fechaA !== fechaB) return fechaB.localeCompare(fechaA);
+        return Number(b.id ?? 0) - Number(a.id ?? 0);
+      });
   }, [lista, searchQuery, filterMonth, filterYear]);
 
   const openNewModal = () => {

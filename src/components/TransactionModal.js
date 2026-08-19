@@ -48,6 +48,7 @@ function TransactionModal({
   const [validationMessage, setValidationMessage] = useState("");
 
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 
   async function handleSave() {
     const montoValue = Number(formMonto);
@@ -91,6 +92,7 @@ function TransactionModal({
     setSelectedMonto(false);
     setSelectedDescription(false);
     setValidationMessage("");
+    setCategoryModalVisible(false);
     closeModal();
   }
 
@@ -227,14 +229,22 @@ function TransactionModal({
                   </Text>
                 </Pressable>
 
-                <Pressable
-                  // onPress={() => setShowDatePicker(true)}
-                  style={styles.input}
-                >
-                  <Text style={styles.inputCategorias}>
-                    {formCategoria || "Categorias"}
-                  </Text>
-                </Pressable>
+                <View style={styles.categoryInputRow}>
+                  <TextInput
+                    style={[styles.input, styles.categoryTextInput]}
+                    placeholder="Categoría"
+                    placeholderTextColor="rgb(200,200,200)"
+                    value={formCategoria}
+                    onChangeText={setFormCategoria}
+                  />
+                  <Pressable
+                    accessibilityLabel="Abrir categorías"
+                    onPress={() => setCategoryModalVisible(true)}
+                    style={styles.categoryPickerButton}
+                  >
+                    <Ionicons name="chevron-down" size={22} color="white" />
+                  </Pressable>
+                </View>
 
                 {validationMessage ? (
                   <Text style={styles.validationText}>{validationMessage}</Text>
@@ -273,86 +283,99 @@ function TransactionModal({
                 )}
               </View>
 
-              {formType === "gasto" ? (
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.categoriesList}
-                  style={{ marginTop: 20, flex: 1 }}
-                >
-                  {categorias_gastos.map((item, index) => (
-                    <View key={index} style={styles.categoryCard}>
-                      <View
-                        style={[
-                          styles.categoryItem,
-                          { backgroundColor: item.color },
-                        ]}
-                      >
-                        <Pressable
-                          onPress={() => {
-                            setFormCategoria(item.name);
-                          }}
-                          style={styles.buttonCategoryIcon}
-                        >
-                          <View>{item.icon}</View>
-                          <Text style={styles.categoryText}>{item.name}</Text>
-                        </Pressable>
-
-                        <Pressable
-                          style={styles.buttonIconDesplegar}
-                          onPress={() =>
-                            setExpanded(
-                              expanded === item.name ? null : item.name,
-                            )
-                          }
-                        >
-                          <Text style={styles.iconDesplegar}>
-                            {expanded === item.name ? "-" : "+"}
-                          </Text>
-                        </Pressable>
-                      </View>
-
-                      {/* Subcategorías */}
-                      {expanded === item.name && (
-                        <View style={styles.subcategoriesWrapper}>
-                          {item.subcategorias?.map((sub, i) => (
-                            <Pressable
-                              key={i}
-                              style={[
-                                styles.subcategoryItem,
-                                { backgroundColor: item.color },
-                              ]}
-                              onPress={() => setFormCategoria(sub.name)}
-                            >
-                              <Text style={styles.subcategoryText}>
-                                {sub.name}
-                              </Text>
-                            </Pressable>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-                  ))}
-                </ScrollView>
-              ) : (
-                <View style={styles.categoriesList}>
-                  {categorias_ingresos.map((item, index) => (
-                    <View key={index}>
+              <Modal
+                visible={categoryModalVisible}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setCategoryModalVisible(false)}
+              >
+                <View style={styles.categoryModalBackdrop}>
+                  <View style={styles.categoryModalCard}>
+                    <View style={styles.categoryModalHeader}>
+                      <Text style={styles.categoryModalTitle}>
+                        Selecciona una categoría
+                      </Text>
                       <Pressable
                         onPress={() => {
-                          setFormCategoria(item.name);
+                          setCategoryModalVisible(false);
+                          setExpanded(false);
                         }}
-                        style={[
-                          styles.categoryItem,
-                          { backgroundColor: item.color },
-                        ]}
+                        style={styles.closeButton}
                       >
-                        <View>{item.icon}</View>
-                        <Text style={styles.categoryText}>{item.name}</Text>
+                        <Ionicons name="close" size={22} color="white" />
                       </Pressable>
                     </View>
-                  ))}
+                    <ScrollView
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={styles.categoriesList}
+                    >
+                      {(formType === "gasto"
+                        ? categorias_gastos
+                        : categorias_ingresos
+                      ).map((item, index) => (
+                        <View key={index} style={styles.categoryCard}>
+                          <View
+                            style={[
+                              styles.categoryItem,
+                              { backgroundColor: item.color },
+                            ]}
+                          >
+                            <Pressable
+                              onPress={() => {
+                                setFormCategoria(item.name);
+                                setCategoryModalVisible(false);
+                              }}
+                              style={styles.buttonCategoryIcon}
+                            >
+                              <View>{item.icon}</View>
+                              <Text style={styles.categoryText}>
+                                {item.name}
+                              </Text>
+                            </Pressable>
+
+                            <Pressable
+                              style={styles.buttonIconDesplegar}
+                              onPress={() =>
+                                setExpanded(
+                                  expanded === item.name ? null : item.name,
+                                )
+                              }
+                            >
+                              <Text style={styles.iconDesplegar}>
+                                {expanded === item.name ? "-" : "+"}
+                              </Text>
+                            </Pressable>
+                          </View>
+
+                          {/* Subcategorías */}
+                          {expanded === item.name && (
+                            <View style={styles.subcategoriesWrapper}>
+                              {item.subcategorias?.map((sub, i) => (
+                                <Pressable
+                                  key={i}
+                                  style={[
+                                    styles.subcategoryItem,
+                                    { backgroundColor: item.color },
+                                  ]}
+                                  onPress={() => {
+                                    setFormCategoria(sub.name);
+                                    setCategoryModalVisible(false);
+                                    setExpanded(false);
+                                  }}
+                                >
+                                  <Text style={styles.subcategoryText}>
+                                    {sub.name}
+                                  </Text>
+                                </Pressable>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </View>
                 </View>
-              )}
+              </Modal>
             </KeyboardAvoidingView>
           </View>
         </View>
@@ -459,6 +482,52 @@ const styles = StyleSheet.create({
   },
   // iconos de categorias
   inputCategorias: { color: "rgb(200,200,200)", fontSize: 17 },
+  categoryInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    marginBottom: 10,
+  },
+  categoryTextInput: {
+    flex: 1,
+    borderBottomWidth: 0,
+    marginBottom: 0,
+  },
+  categoryPickerButton: {
+    width: 52,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Modal de categorias
+  categoryModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(25, 25, 25, 0.72)",
+    justifyContent: "flex-end",
+    paddingBottom: 60,
+  },
+  categoryModalCard: {
+    maxHeight: "78%",
+    backgroundColor: "rgba(20, 23, 28, 0.98)",
+    padding: 16,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: "#1e293b",
+  },
+  categoryModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+  },
+  categoryModalTitle: {
+    color: "white",
+    fontSize: 17,
+    fontWeight: "800",
+  },
   categoryCard: {
     flexDirection: "column",
     gap: 10,

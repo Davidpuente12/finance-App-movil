@@ -5,6 +5,31 @@ import { formatearMonto } from "../utils/formatearMonto";
 import { categorias_gastos } from "../data/categoriasfinas";
 import { getMonthYearFiltered } from "../utils/fechaActual";
 
+function getCategoryInfo(category) {
+  const categoryInfo = categorias_gastos.find(
+    (item) => item.name.toLowerCase() === category,
+  );
+
+  if (categoryInfo) return categoryInfo;
+
+  const parentCategory = categorias_gastos.find((item) =>
+    item.subcategorias?.some(
+      (subcategory) => subcategory.name.toLowerCase() === category,
+    ),
+  );
+  const subcategoryInfo = parentCategory?.subcategorias?.find(
+    (item) => item.name.toLowerCase() === category,
+  );
+
+  if (!subcategoryInfo) return null;
+
+  return {
+    ...subcategoryInfo,
+    icon: subcategoryInfo.icon ?? parentCategory.icon,
+    color: subcategoryInfo.color ?? parentCategory.color,
+  };
+}
+
 function ResumenMensual({
   selectedMonthItems,
   totalIngresosMensual,
@@ -26,9 +51,7 @@ function ResumenMensual({
 
     return Array.from(totals.entries())
       .map(([category, total]) => {
-        const catInfo = categorias_gastos.find(
-          (c) => c.name.toLowerCase() === category,
-        );
+        const catInfo = getCategoryInfo(category);
         const porcentajeSobreGastos =
           totalGastosMensual > 0 ? (total / totalGastosMensual) * 100 : 0;
         const porcentajeSobreIngresos =
@@ -44,7 +67,7 @@ function ResumenMensual({
         };
       })
       .sort((a, b) => b.total - a.total);
-  }, [selectedMonthItems, totalGastosMensual]);
+  }, [selectedMonthItems, totalGastosMensual, totalIngresosMensual]);
 
   return (
     <View style={styles.section}>

@@ -7,26 +7,65 @@ import {
 import Entypo from "@expo/vector-icons/Entypo";
 
 const getCategoryIcon = (categoria, tipo) => {
-  let cat;
+  if (!categoria) {
+    return (
+      <View style={[styles.categoryIcon, { backgroundColor: "transparent" }]}>
+        <Entypo name="wallet" size={20} color="white" />
+      </View>
+    );
+  }
 
-  if (categoria) {
-    const lista =
-      tipo === "gasto"
-        ? categorias_gastos
-        : tipo === "ingreso"
-          ? categorias_ingresos
-          : [];
-    cat = lista.find((c) => c.name.toLowerCase() === categoria.toLowerCase());
+  const lista =
+    tipo === "gasto"
+      ? categorias_gastos
+      : tipo === "ingreso"
+        ? categorias_ingresos
+        : [];
+
+  // Buscar categoría de primer nivel
+  const topCat = lista.find(
+    (c) => c.name.toLowerCase() === categoria.toLowerCase(),
+  );
+  if (topCat) {
+    return (
+      <View
+        style={[
+          styles.categoryIcon,
+          { backgroundColor: topCat.color || "transparent" },
+        ]}
+      >
+        {topCat.icon}
+      </View>
+    );
+  }
+
+  // Buscar en subcategorías y usar el icono/color de la subcategoría si existe,
+  // o el del padre si no
+  for (const parent of lista) {
+    if (parent.subcategorias) {
+      const sub = parent.subcategorias.find(
+        (s) => s.name.toLowerCase() === categoria.toLowerCase(),
+      );
+      if (sub) {
+        const icon = sub.icon || parent.icon;
+        const color = sub.color || parent.color;
+        return (
+          <View
+            style={[
+              styles.categoryIcon,
+              { backgroundColor: color || "transparent" },
+            ]}
+          >
+            {icon}
+          </View>
+        );
+      }
+    }
   }
 
   return (
-    <View
-      style={[
-        styles.categoryIcon,
-        { backgroundColor: cat?.color || "transparent" },
-      ]}
-    >
-      {cat ? cat.icon : <Entypo name="wallet" size={20} color="white" />}
+    <View style={[styles.categoryIcon, { backgroundColor: "transparent" }]}>
+      <Entypo name="wallet" size={20} color="white" />
     </View>
   );
 };
@@ -36,10 +75,10 @@ function TransactionRow({ item, onEdit }) {
     <Pressable style={styles.transactionRow} onPress={onEdit}>
       {getCategoryIcon(item.categoria, item.tipo)}
       <View style={styles.transactionInfo}>
-        <Text style={styles.transactionTitle}>
+        <Text style={styles.transactionTitle}>{item.categoria}</Text>
+        <Text style={styles.transactionSubtitle}>
           {item.descripcion || item.categoria}
         </Text>
-        <Text style={styles.transactionSubtitle}>{item.categoria}</Text>
       </View>
       <View style={styles.transactionActions}>
         <Text
