@@ -45,6 +45,7 @@ function TransactionModal({
 
   const [selectedMonto, setSelectedMonto] = useState(false);
   const [selectedDescription, setSelectedDescription] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -91,6 +92,7 @@ function TransactionModal({
   function handleOpen() {
     setSelectedMonto(false);
     setSelectedDescription(false);
+    setSelectedCategory(false);
     setValidationMessage("");
     setCategoryModalVisible(false);
     closeModal();
@@ -141,7 +143,7 @@ function TransactionModal({
                 </View>
 
                 <Pressable style={styles.sendButton} onPress={handleSave}>
-                  <Text style={styles.iconSend}>✓</Text>
+                  <Text style={styles.iconSend}>Guardar</Text>
                 </Pressable>
               </View>
             </View>
@@ -229,13 +231,28 @@ function TransactionModal({
                   </Text>
                 </Pressable>
 
-                <View style={styles.categoryInputRow}>
+                <View
+                  style={[
+                    styles.categoryInputRow,
+                    {
+                      borderBottomColor: selectedCategory
+                        ? "rgba(79,57,246)"
+                        : "#334155",
+                    },
+                  ]}
+                >
                   <TextInput
                     style={[styles.input, styles.categoryTextInput]}
                     placeholder="Categoría"
-                    placeholderTextColor="rgb(200,200,200)"
+                    placeholderTextColor={
+                      selectedCategory
+                        ? "rgba(119,119,255)"
+                        : "rgb(200,200,200)"
+                    }
                     value={formCategoria}
                     onChangeText={setFormCategoria}
+                    onFocus={() => setSelectedCategory(true)}
+                    onBlur={() => setSelectedCategory(false)}
                   />
                   <Pressable
                     accessibilityLabel="Abrir categorías"
