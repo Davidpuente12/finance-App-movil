@@ -293,85 +293,111 @@ function TransactionModal({
                   <View style={styles.categoryModalCard}>
                     <View style={styles.categoryModalHeader}>
                       <Text style={styles.categoryModalTitle}>
-                        Selecciona una categoría
+                        {expanded
+                          ? `Selecciona en ${expanded.name}`
+                          : "Selecciona una categoría"}
                       </Text>
                       <Pressable
                         onPress={() => {
                           setCategoryModalVisible(false);
-                          setExpanded(false);
+                          setExpanded(null);
                         }}
                         style={styles.closeButton}
                       >
                         <Ionicons name="close" size={22} color="white" />
                       </Pressable>
                     </View>
+                    {expanded && (
+                      <Pressable
+                        onPress={() => setExpanded(null)}
+                        style={styles.backCategoryButton}
+                      >
+                        <Ionicons name="arrow-back" size={18} color="white" />
+                        <Text style={styles.backCategoryText}>
+                          Todas las categorías
+                        </Text>
+                      </Pressable>
+                    )}
                     <ScrollView
                       showsVerticalScrollIndicator={false}
-                      contentContainerStyle={styles.categoriesList}
+                      contentContainerStyle={
+                        expanded
+                          ? styles.subcategoriesList
+                          : styles.categoriesList
+                      }
                     >
-                      {(formType === "gasto"
-                        ? categorias_gastos
-                        : categorias_ingresos
-                      ).map((item, index) => (
-                        <View key={index} style={styles.categoryCard}>
-                          <View
-                            style={[
-                              styles.categoryItem,
-                              { backgroundColor: item.color },
-                            ]}
-                          >
+                      {(expanded
+                        ? expanded.subcategorias
+                        : formType === "gasto"
+                          ? categorias_gastos
+                          : categorias_ingresos
+                      ).map((item, index) => {
+                        if (expanded) {
+                          return (
                             <Pressable
+                              key={index}
+                              style={[
+                                styles.subcategoryItem,
+                                { backgroundColor: expanded.color },
+                              ]}
                               onPress={() => {
                                 setFormCategoria(item.name);
                                 setCategoryModalVisible(false);
+                                setExpanded(null);
                               }}
-                              style={styles.buttonCategoryIcon}
                             >
-                              <View>{item.icon}</View>
-                              <Text style={styles.categoryText}>
+                              {item.icon || expanded.icon}
+                              <Text style={styles.subcategoryText}>
                                 {item.name}
                               </Text>
                             </Pressable>
+                          );
+                        }
 
-                            <Pressable
-                              style={styles.buttonIconDesplegar}
-                              onPress={() =>
-                                setExpanded(
-                                  expanded === item.name ? null : item.name,
-                                )
-                              }
+                        return (
+                          <View key={index} style={styles.categoryCard}>
+                            <View
+                              style={[
+                                styles.categoryItem,
+                                { backgroundColor: item.color },
+                              ]}
                             >
-                              <Text style={styles.iconDesplegar}>
-                                {expanded === item.name ? "-" : "+"}
-                              </Text>
-                            </Pressable>
-                          </View>
-
-                          {/* Subcategorías */}
-                          {expanded === item.name && (
-                            <View style={styles.subcategoriesWrapper}>
-                              {item.subcategorias?.map((sub, i) => (
-                                <Pressable
-                                  key={i}
-                                  style={[
-                                    styles.subcategoryItem,
-                                    { backgroundColor: item.color },
-                                  ]}
-                                  onPress={() => {
-                                    setFormCategoria(sub.name);
-                                    setCategoryModalVisible(false);
-                                    setExpanded(false);
-                                  }}
+                              <Pressable
+                                style={styles.categorySelect}
+                                onPress={() => {
+                                  setFormCategoria(item.name);
+                                  setCategoryModalVisible(false);
+                                }}
+                              >
+                                <View style={styles.categoryIconSlot}>
+                                  {item.icon}
+                                </View>
+                                <Text
+                                  style={styles.categoryText}
+                                  numberOfLines={2}
                                 >
-                                  <Text style={styles.subcategoryText}>
-                                    {sub.name}
-                                  </Text>
-                                </Pressable>
-                              ))}
+                                  {item.name}
+                                </Text>
+                              </Pressable>
+                              <View style={styles.categoryArrowSlot}>
+                                {item.subcategorias?.length ? (
+                                  <Pressable
+                                    accessibilityLabel={`Ver subcategorías de ${item.name}`}
+                                    onPress={() => setExpanded(item)}
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="chevron-forward"
+                                      size={20}
+                                      color="white"
+                                    />
+                                  </Pressable>
+                                ) : null}
+                              </View>
                             </View>
-                          )}
-                        </View>
-                      ))}
+                          </View>
+                        );
+                      })}
                     </ScrollView>
                   </View>
                 </View>
@@ -528,6 +554,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
   },
+  backCategoryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
+  },
+  backCategoryText: {
+    color: "#cbd5e1",
+    fontSize: 14,
+  },
   categoryCard: {
     flexDirection: "column",
     gap: 10,
@@ -538,34 +574,45 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     gap: 12,
   },
+  subcategoriesList: {
+    gap: 10,
+  },
   categoryItem: {
     width: 170,
     height: 55,
     flexDirection: "row",
     borderRadius: 10,
-    justifyContent: "space-around",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    gap: 8,
+  },
+  categorySelect: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  categoryIconSlot: {
+    width: 24,
     alignItems: "center",
   },
-  buttonCategoryIcon: { flex: 3.5, alignItems: "center" },
+  categoryArrowSlot: {
+    width: 20,
+    alignItems: "center",
+  },
   categoryText: {
+    flex: 1,
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
   },
-  buttonIconDesplegar: { flex: 1 },
-  iconDesplegar: {
-    fontSize: 30,
-    color: "white",
-    textAlign: "center",
-  },
-  // sucategorias
-  subcategoriesWrapper: {
-    flexDirection: "column",
-  },
   subcategoryItem: {
-    padding: 8,
+    minHeight: 52,
+    padding: 12,
     borderRadius: 6,
-    marginVertical: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   subcategoryText: {
     color: "white",

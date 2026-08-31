@@ -42,19 +42,31 @@ function StatsScreen({
   filterMonth,
   filterYear,
 }) {
-  const annualExpenseByMonth = useMemo(() => {
+  const annualSummaryByMonth = useMemo(() => {
     const targetYear = Number(filterYear) || new Date().getFullYear();
-    const totals = Array.from({ length: 12 }, () => 0);
+    const totals = Array.from({ length: 12 }, () => ({
+      expenses: 0,
+      income: 0,
+      movements: 0,
+    }));
 
     lista.forEach((item) => {
-      if (item.tipo !== "gasto") return;
       const [year, month] = item.fecha.split("-").map(Number);
-      if (year !== targetYear) return;
-      totals[month - 1] += item.monto;
+      if (year !== targetYear || month < 1 || month > 12) return;
+
+      const monthSummary = totals[month - 1];
+      monthSummary.movements += 1;
+      if (item.tipo === "gasto") monthSummary.expenses += item.monto;
+      if (item.tipo === "ingreso") monthSummary.income += item.monto;
     });
 
     return totals;
   }, [lista, filterYear]);
+
+  const annualExpenseByMonth = annualSummaryByMonth.map(
+    (month) => month.expenses,
+  );
+  const annualIncomeByMonth = annualSummaryByMonth.map((month) => month.income);
 
   const annualExpenseTotal = useMemo(
     () => annualExpenseByMonth.reduce((sum, value) => sum + value, 0),
@@ -66,6 +78,22 @@ function StatsScreen({
   const maxIndex = hasData
     ? annualExpenseByMonth.indexOf(maxAnnualExpense)
     : -1;
+
+  const annualIncomeTotal = useMemo(() => {
+    const total = annualIncomeByMonth.reduce((sum, value) => sum + value, 0);
+    const monthCount = annualIncomeByMonth.filter((value) => value > 0).length;
+
+    return { total, monthCount };
+  }, [annualIncomeByMonth]);
+
+  const annualIncomeAmount = annualIncomeTotal.total;
+  const annualExpenseMonthCount = annualExpenseByMonth.filter(
+    (value) => value > 0,
+  ).length;
+
+  const averageMonthlyExpenses = annualExpenseMonthCount
+    ? annualExpenseTotal / annualExpenseMonthCount
+    : 0;
 
   return (
     <ScrollView
@@ -103,14 +131,29 @@ function StatsScreen({
 
         <View style={styles.yearSummaryRow}>
           <MetricLine
-            label="Gastos del año"
+            label="Gasto total del año"
             value={formatearMonto(annualExpenseTotal)}
+            tone="negative"
+          />
+
+          <MetricLine
+            label="Ingresos totales del año"
+            value={formatearMonto(annualIncomeAmount)}
+            tone="positive"
+          />
+
+          <MetricLine
+            label="Promedio mensual de gastos"
+            value={formatearMonto(averageMonthlyExpenses)}
             tone="neutral"
           />
+
           <MetricLine
             label="Mes más alto"
-            value={formatearMonto(Math.max(...annualExpenseByMonth))}
-            tone="negative"
+            value={`${maxIndex >= 0 ? monthNames[maxIndex] : "Sin datos"}  ${formatearMonto(
+              maxAnnualExpense,
+            )}`}
+            tone="neutral"
           />
         </View>
 
@@ -139,10 +182,41 @@ function StatsScreen({
         </View>
 
         <View style={styles.yearGrid}>
-          {annualExpenseByMonth.map((value, index) => (
+          {annualSummaryByMonth.map((month, index) => (
             <View key={monthNames[index]} style={styles.yearItem}>
-              <Text style={styles.yearMonth}>{monthNames[index]}</Text>
-              <Text style={styles.yearAmount}>{formatearMonto(value)}</Text>
+              <Text style={styles.yearMonthTitle}>{monthNames[index]}</Text>
+
+              <View style={styles.yearMetric}>
+                <Text style={styles.yearMetricLabel}>Ingresos</Text>
+                <Text style={styles.monthlyIncomeTitle}>
+                  {formatearMonto(month.income)}
+                </Text>
+              </View>
+
+              <View style={styles.yearMetric}>
+                <Text style={styles.yearMetricLabel}>Gastos</Text>
+                <Text style={styles.monthlyExpensesTitle}>
+                  {formatearMonto(month.expenses)}
+                </Text>
+              </View>
+
+              <View style={styles.yearMetric}>
+                <Text style={styles.yearMetricLabel}>Balance</Text>
+                <Text
+                  style={[
+                    styles.yearBalanceAmount,
+                    month.income - month.expenses >= 0
+                      ? styles.positive
+                      : styles.negative,
+                  ]}
+                >
+                  {formatearMonto(month.income - month.expenses)}
+                </Text>
+              </View>
+              <Text style={styles.yearMovements}>
+                {month.movements}{" "}
+                {month.movements === 1 ? "movimiento" : "movimientos"}
+              </Text>
             </View>
           ))}
         </View>
@@ -177,7 +251,13 @@ const styles = StyleSheet.create({
   cardsRow: {
     backgroundColor: "rgb(20, 23, 28)",
     flexDirection: "row",
-    padding: 10,
+    padding: 12,
+    gap: 10,
+    borderRadius: 12,
+    marginHorizontal: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#1e293b",
   },
   section: {
     marginHorizontal: 10,
@@ -193,7 +273,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#1f2937",
   },
@@ -201,13 +282,13 @@ const styles = StyleSheet.create({
   metricValue: { fontWeight: "700" },
   positive: { color: "#34d399" },
   negative: { color: "#fb7185" },
-  neutral: { color: "#7dd3fc" },
+  neutral: { color: "white" },
   yearSummaryRow: {
-    gap: 10,
+    gap: 12,
+    marginBottom: 4,
   },
   chartCard: {
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingVertical: 20,
   },
   barChart: {
     flexDirection: "row",
@@ -241,20 +322,49 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   yearGrid: {
+    marginTop: 15,
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 10,
   },
   yearItem: {
     width: "48%",
-    padding: 8,
+    padding: 14,
     borderRadius: 12,
-    backgroundColor: "rgb(32, 32, 38)",
+    backgroundColor: "rgba(30, 41, 59, 0.7)",
     borderWidth: 1,
-    borderColor: "#1e293b",
+    // borderColor: "#334155",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  yearMonth: { color: "#94a3b8", fontSize: 13, marginBottom: 4 },
-  yearAmount: { color: "#f8fafc", fontWeight: "700" },
+  yearMonthTitle: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  monthlyExpensesTitle: { color: "#fb7185", fontWeight: "800", fontSize: 14 },
+  monthlyIncomeTitle: { color: "#34d399", fontWeight: "800", fontSize: 14 },
+  yearBalanceAmount: { fontWeight: "800", fontSize: 14 },
+  yearMetric: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(51, 65, 85, 0.5)",
+  },
+  yearMetricLabel: { color: "#94a3b8", fontSize: 12 },
+
+  yearMovements: {
+    color: "#64748b",
+    fontSize: 11,
+    marginTop: 10,
+    fontStyle: "italic",
+  },
 });
 
 export { StatsScreen };

@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Svg, { Circle } from "react-native-svg";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import Entypo from "@expo/vector-icons/Entypo";
 import { formatearMonto } from "../utils/formatearMonto";
 import { categorias_gastos } from "../data/categoriasfinas";
 import { getMonthYearFiltered } from "../utils/fechaActual";
@@ -21,13 +22,30 @@ function getCategoryInfo(category) {
     (item) => item.name.toLowerCase() === category,
   );
 
-  if (!subcategoryInfo) return null;
+  if (!subcategoryInfo) {
+    // Para categorías personalizadas, retornar el icono de "Otros"
+    return {
+      icon: <Entypo name="wallet" size={20} color="white" />,
+      color: "#2d4473",
+    };
+  }
 
   return {
     ...subcategoryInfo,
     icon: subcategoryInfo.icon ?? parentCategory.icon,
     color: subcategoryInfo.color ?? parentCategory.color,
   };
+}
+
+function getParentCategory(category) {
+  return (
+    categorias_gastos.find((item) => item.name.toLowerCase() === category) ||
+    categorias_gastos.find((item) =>
+      item.subcategorias?.some(
+        (subcategory) => subcategory.name.toLowerCase() === category,
+      ),
+    )
+  );
 }
 
 function ResumenMensual({
@@ -37,6 +55,8 @@ function ResumenMensual({
   filterMonth,
   filterYear,
 }) {
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
   const monthExpenseCategories = useMemo(() => {
     const expenses = selectedMonthItems.filter((item) => item.tipo === "gasto");
     const totals = new Map();
@@ -69,6 +89,80 @@ function ResumenMensual({
       .sort((a, b) => b.total - a.total);
   }, [selectedMonthItems, totalGastosMensual, totalIngresosMensual]);
 
+  const monthExpenseParentCategories = useMemo(() => {
+    const totals = new Map();
+
+    monthExpenseCategories.forEach((item) => {
+      const parentCategory = getParentCategory(item.category.toLowerCase());
+      const category = parentCategory?.name || item.category;
+      const currentTotal = totals.get(category);
+
+      totals.set(category, {
+        category,
+        total: (currentTotal?.total ?? 0) + item.total,
+        color: parentCategory?.color || item.color,
+      });
+    });
+
+    return Array.from(totals.values()).sort((a, b) => b.total - a.total);
+  }, [monthExpenseCategories]);
+
+  const handleDonutPress = (event) => {
+    const { locationX, locationY } = event.nativeEvent;
+
+    // El SVG es 250x250 píxeles pero tiene viewBox 0 0 180 180
+    const scale = 180 / 250;
+    const svgX = locationX * scale;
+    const svgY = locationY * scale;
+
+    // Centro del viewBox (90, 90)
+    const centerX = 90;
+    const centerY = 90;
+
+    // Convertir a coordenadas relativas al centro
+    const dx = svgX - centerX;
+    const dy = svgY - centerY;
+
+    // Calcular distancia desde el centro
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Verificar si está en el rango del donut (aproximadamente 50-74)
+    if (distance < 50 || distance > 74) {
+      return;
+    }
+
+    // Calcular ángulo en grados (0-360)
+    // atan2 devuelve radianes de -PI a PI
+    // Math.atan2(y, x) donde (0,1) es arriba, (1,0) es derecha
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+    // Ajustar para que 0° esté en la parte superior (debido a rotation -90 en el círculo)
+    angle = angle + 90;
+    if (angle < 0) angle += 360;
+    if (angle >= 360) angle -= 360;
+
+    // Calcular posiciones de los segmentos
+    let currentAngle = 0;
+
+    for (let i = 0; i < monthExpenseParentCategories.length; i++) {
+      const item = monthExpenseParentCategories[i];
+      const portion = item.total / totalGastosMensual;
+      const segmentDegrees = portion * 360;
+
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + segmentDegrees;
+
+      // Verificar si el toque cae en este segmento
+      if (angle >= startAngle && angle < endAngle) {
+        const category = item.category;
+        setSelectedCategory(selectedCategory === category ? null : category);
+        return;
+      }
+
+      currentAngle = endAngle;
+    }
+  };
+
   return (
     <View style={styles.section}>
       <View>
@@ -85,7 +179,11 @@ function ResumenMensual({
       </View>
 
       <View style={styles.monthSummaryRow}>
-        <View style={styles.donutWrap}>
+        <TouchableOpacity
+          style={styles.donutWrap}
+          onPress={handleDonutPress}
+          activeOpacity={1}
+        >
           <Svg width={250} height={250} viewBox="0 0 180 180">
             <Circle
               cx="90"
@@ -96,18 +194,34 @@ function ResumenMensual({
               strokeWidth="20"
             />
             <DonutSlices
-              data={monthExpenseCategories}
+              data={monthExpenseParentCategories}
               total={totalGastosMensual}
+              selectedCategory={selectedCategory}
             />
           </Svg>
 
           <View style={styles.donutCenter}>
-            <Text style={styles.donutLabel}>Gastos</Text>
-            <Text style={styles.donutValue}>
-              {formatearMonto(totalGastosMensual)}
-            </Text>
+            {selectedCategory ? (
+              <>
+                <Text style={styles.donutLabel}>{selectedCategory}</Text>
+                <Text style={styles.donutValue}>
+                  {formatearMonto(
+                    monthExpenseParentCategories.find(
+                      (item) => item.category === selectedCategory,
+                    )?.total || 0,
+                  )}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.donutLabel}>Gastos</Text>
+                <Text style={styles.donutValue}>
+                  {formatearMonto(totalGastosMensual)}
+                </Text>
+              </>
+            )}
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.legendList}>
@@ -146,7 +260,7 @@ function ResumenMensual({
   );
 }
 
-function DonutSlices({ data, total }) {
+function DonutSlices({ data, total, selectedCategory }) {
   if (total <= 0 || data.length === 0) {
     return null;
   }
@@ -158,6 +272,8 @@ function DonutSlices({ data, total }) {
   return data.map((item) => {
     const dashLength = (item.total / total) * circumference;
     const dashOffset = circumference - accumulated;
+    const isSelected = selectedCategory === item.category;
+    const currentStrokeWidth = isSelected ? 28 : 20;
     accumulated += dashLength;
 
     return (
@@ -168,7 +284,7 @@ function DonutSlices({ data, total }) {
         r={radius}
         fill="transparent"
         stroke={item.color}
-        strokeWidth="20"
+        strokeWidth={currentStrokeWidth}
         strokeDasharray={`${dashLength} ${circumference - dashLength}`}
         strokeDashoffset={dashOffset}
         rotation="-90"
