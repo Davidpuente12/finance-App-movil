@@ -134,6 +134,12 @@ function TransactionModal({
     closeModal();
   }
 
+  function resetInputSelection() {
+    setSelectedMonto(false);
+    setSelectedDescription(false);
+    setSelectedCategory(false);
+  }
+
   const selectedAccount = cuentas.find((cuenta) => cuenta.id === formCuentaId);
   const transferDestination = cuentas.find(
     (cuenta) => cuenta.id === formCuentaDestinoId,
@@ -199,6 +205,7 @@ function TransactionModal({
                 onPress={() => {
                   setFormType("gasto");
                   setFormCategoria("");
+                  resetInputSelection();
                 }}
               >
                 <Text style={styles.segmentText}>Gastos</Text>
@@ -211,6 +218,7 @@ function TransactionModal({
                 onPress={() => {
                   setFormType("ingreso");
                   setFormCategoria("");
+                  resetInputSelection();
                 }}
               >
                 <Text style={styles.segmentText}>Ingresos</Text>
@@ -224,6 +232,7 @@ function TransactionModal({
                   setFormType("transferencia");
                   setFormCategoria("");
                   setFormDescripcion("");
+                  resetInputSelection();
                 }}
               >
                 <Text style={styles.segmentText}>Transferencias</Text>
