@@ -4,13 +4,27 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { useState } from "react";
 
 import { Balance } from "../components/Balance";
 import { TransactionRow } from "../components/TransactionRow";
 import { ResumenMensualHome } from "../components/ResumenMensualHome";
 import { useNavigation } from "@react-navigation/native";
+
+const accountColors = [
+  "rgb(79, 57, 246)",
+  "rgb(254, 83, 83)",
+  "rgb(0, 200, 136)",
+  "#2498f2",
+  "#fba716",
+  "#84cc16",
+];
 
 function HomeScreen({
   loading,
@@ -18,18 +32,66 @@ function HomeScreen({
   balanceTotal,
   totalIngresosMensual,
   totalGastosMensual,
-  saldoDisponible,
   formatearMonto,
   openEditModal,
   deleteTransaction,
   filterMonth,
   filterYear,
+  cuentas,
+  lista,
+  createAccount,
+  renameAccount,
+  deleteAccount,
 }) {
-  const latestTransactions = [...selectedMonthItems].sort(
-    (a, b) => new Date(b.fecha) - new Date(a.fecha),
-  );
+  const [accountsModalVisible, setAccountsModalVisible] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountColor, setAccountColor] = useState(accountColors[0]);
+  const [editingAccount, setEditingAccount] = useState(null);
+  const [accountToDelete, setAccountToDelete] = useState(null);
+  const latestTransactions = [...selectedMonthItems].sort((a, b) => {
+    const dateDifference = new Date(b.fecha) - new Date(a.fecha);
+    if (dateDifference !== 0) return dateDifference;
+
+    return Number(b.id ?? 0) - Number(a.id ?? 0);
+  });
+
+  const accountBalances = cuentas.map((cuenta) => ({
+    ...cuenta,
+    saldo: lista
+      .filter((item) => item.cuenta_id === cuenta.id)
+      .reduce(
+        (total, item) =>
+          item.tipo === "ingreso" ? total + item.monto : total - item.monto,
+        0,
+      ),
+  }));
 
   const navigation = useNavigation();
+
+  const handleSaveAccount = async () => {
+    const account = editingAccount
+      ? await renameAccount(editingAccount.id, accountName, accountColor)
+      : await createAccount(accountName, accountColor);
+
+    if (account) {
+      setAccountName("");
+      setAccountColor(accountColors[0]);
+      setEditingAccount(null);
+    }
+  };
+
+  const handleDeleteAccount = async (targetAccountId) => {
+    if (await deleteAccount(accountToDelete.id, targetAccountId)) {
+      setAccountToDelete(null);
+    }
+  };
+
+  const closeAccountsModal = () => {
+    setAccountsModalVisible(false);
+    setAccountName("");
+    setAccountColor(accountColors[0]);
+    setEditingAccount(null);
+  };
 
   return (
     <ScrollView
@@ -37,11 +99,39 @@ function HomeScreen({
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
+      <View style={[styles.section, { marginTop: 8 }]}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Cuentas</Text>
+          <Pressable
+            accessibilityLabel="Administrar cuentas"
+            onPress={() => setAccountsModalVisible(true)}
+            style={styles.addAccountButton}
+          >
+            <Text style={styles.addAccountButtonText}>Añadir cuenta</Text>
+          </Pressable>
+        </View>
+        <View style={styles.accountsList}>
+          {accountBalances.map((cuenta) => (
+            <View
+              key={cuenta.id}
+              style={[styles.accountCard, { backgroundColor: cuenta.color }]}
+            >
+              <Text style={styles.accountCardName} numberOfLines={1}>
+                {cuenta.nombre}
+              </Text>
+              <Text style={styles.accountCardLabel}>Saldo actual</Text>
+              <Text style={styles.accountCardBalance}>
+                {formatearMonto(cuenta.saldo)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
       <Balance
         balanceTotal={balanceTotal}
         totalIngresosMensual={totalIngresosMensual}
         totalGastosMensual={totalGastosMensual}
-        saldoDisponible={saldoDisponible}
         filterMonth={filterMonth}
         filterYear={filterYear}
       />
@@ -73,6 +163,7 @@ function HomeScreen({
                   <TransactionRow
                     key={item.id}
                     item={item}
+                    cuentas={cuentas}
                     formatearMonto={formatearMonto}
                     onEdit={() => openEditModal(item)}
                     onDelete={() => deleteTransaction(item.id)}
@@ -89,6 +180,134 @@ function HomeScreen({
           <Text style={styles.sectionFooterText}>Mostras mas</Text>
         </Pressable>
       </View>
+
+      <Modal
+        visible={accountsModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={closeAccountsModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalBackdrop}
+        >
+          <View style={styles.accountsModalCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Administrar cuentas</Text>
+              <Pressable onPress={closeAccountsModal} hitSlop={8}>
+                <Text style={styles.closeButton}>×</Text>
+              </Pressable>
+            </View>
+            <View style={styles.accountForm}>
+              <TextInput
+                style={styles.accountNameInput}
+                placeholder={
+                  editingAccount ? "Nuevo nombre" : "Nombre de la cuenta"
+                }
+                placeholderTextColor="#94a3b8"
+                value={accountName}
+                onChangeText={setAccountName}
+                maxLength={30}
+              />
+              <Pressable
+                style={styles.accountSaveButton}
+                onPress={handleSaveAccount}
+                disabled={
+                  !accountName.trim() ||
+                  (!editingAccount && cuentas.length >= 10)
+                }
+              >
+                <Text style={styles.accountSaveButtonText}>
+                  {editingAccount ? "Guardar" : "Añadir"}
+                </Text>
+              </Pressable>
+            </View>
+            <View style={styles.colorPicker}>
+              {accountColors.map((color) => (
+                <Pressable
+                  key={color}
+                  accessibilityLabel={`Seleccionar color ${color}`}
+                  onPress={() => setAccountColor(color)}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: color },
+                    accountColor === color && styles.selectedColorSwatch,
+                  ]}
+                />
+              ))}
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {accountBalances.map((cuenta) => (
+                <View key={cuenta.id} style={styles.accountManageItem}>
+                  <View style={styles.accountManageInfo}>
+                    <Text style={styles.accountManageName}>
+                      {cuenta.nombre}
+                    </Text>
+                    <Text style={styles.accountManageBalance}>
+                      {formatearMonto(cuenta.saldo)}
+                    </Text>
+                  </View>
+                  <Pressable
+                    accessibilityLabel={`Renombrar ${cuenta.nombre}`}
+                    onPress={() => {
+                      setEditingAccount(cuenta);
+                      setAccountName(cuenta.nombre);
+                      setAccountColor(cuenta.color ?? accountColors[0]);
+                    }}
+                    style={styles.accountAction}
+                  >
+                    <Text style={styles.accountActionText}>Editar</Text>
+                  </Pressable>
+                  {cuentas.length > 1 && (
+                    <Pressable
+                      accessibilityLabel={`Eliminar ${cuenta.nombre}`}
+                      onPress={() => setAccountToDelete(cuenta)}
+                      style={styles.accountAction}
+                    >
+                      <Text style={styles.deleteActionText}>Eliminar</Text>
+                    </Pressable>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+            <Text style={styles.accountLimit}>{cuentas.length}/10 cuentas</Text>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={Boolean(accountToDelete)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAccountToDelete(null)}
+      >
+        <View style={styles.transferBackdrop}>
+          <View style={styles.transferCard}>
+            <Text style={styles.sectionTitle}>Mover transacciones</Text>
+            <Text style={styles.transferDescription}>
+              Elige la cuenta destino para los movimientos de{" "}
+              {accountToDelete?.nombre}.
+            </Text>
+            {cuentas
+              .filter((cuenta) => cuenta.id !== accountToDelete?.id)
+              .map((cuenta) => (
+                <Pressable
+                  key={cuenta.id}
+                  onPress={() => handleDeleteAccount(cuenta.id)}
+                  style={styles.transferButton}
+                >
+                  <Text style={styles.transferButtonText}>{cuenta.nombre}</Text>
+                </Pressable>
+              ))}
+            <Pressable
+              onPress={() => setAccountToDelete(null)}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -109,7 +328,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   section: {
-    marginHorizontal: 10,
+    marginHorizontal: 8,
     gap: 12,
     padding: 16,
     borderRadius: 12,
@@ -141,6 +360,111 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+  // seccion de cuentas
+  addAccountButton: { paddingVertical: 6, paddingHorizontal: 10 },
+  addAccountButtonText: {
+    color: "rgb(119, 119, 255)",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  accountsList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  accountCard: {
+    width: "48.5%",
+    minHeight: 90,
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
+  },
+  accountCardName: { color: "white", fontSize: 17, fontWeight: "700" },
+  accountCardLabel: { color: "#fcfdfe", fontSize: 12, marginTop: 5 },
+  accountCardBalance: {
+    color: "#f8fafc",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    marginBottom: 49,
+  },
+  accountsModalCard: {
+    maxHeight: "78%",
+    padding: 16,
+    backgroundColor: "rgb(20, 23, 28)",
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  closeButton: { color: "white", fontSize: 28, lineHeight: 28 },
+  accountForm: { flexDirection: "row", gap: 8, marginVertical: 16 },
+  colorPicker: { flexDirection: "row", gap: 12, marginBottom: 16 },
+  colorSwatch: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  selectedColorSwatch: { borderColor: "white" },
+  accountNameInput: {
+    flex: 1,
+    padding: 12,
+    color: "#f8fafc",
+    fontSize: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  accountSaveButton: {
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    backgroundColor: "rgb(79, 57, 246)",
+    borderRadius: 6,
+  },
+  accountSaveButtonText: { color: "white", fontWeight: "700" },
+  accountManageItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  accountManageInfo: { flex: 1 },
+  accountManageName: { color: "white", fontSize: 16, fontWeight: "700" },
+  accountManageBalance: { color: "#94a3b8", marginTop: 3 },
+  accountAction: { paddingVertical: 6, paddingHorizontal: 4 },
+  accountActionText: { color: "#cbd5e1", fontWeight: "700" },
+  deleteActionText: { color: "#fb7185", fontWeight: "700" },
+  accountLimit: { color: "#94a3b8", textAlign: "right", marginTop: 14 },
+  transferBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  transferCard: {
+    gap: 12,
+    padding: 20,
+    backgroundColor: "rgb(20, 23, 28)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  transferDescription: { color: "#cbd5e1", lineHeight: 20 },
+  transferButton: {
+    alignItems: "center",
+    padding: 13,
+    backgroundColor: "rgb(79, 57, 246)",
+    borderRadius: 6,
+  },
+  transferButtonText: { color: "white", fontWeight: "700" },
+  cancelButton: { alignItems: "center", padding: 10 },
+  cancelButtonText: { color: "#cbd5e1", fontWeight: "700" },
 });
 
 export { HomeScreen };

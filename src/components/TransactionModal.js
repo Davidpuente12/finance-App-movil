@@ -24,6 +24,7 @@ function TransactionModal({
   editingTransaction,
   closeModal,
   saveTransaction,
+  saveTransfer,
   deleteTransaction,
   // estados de los valores
   formType,
@@ -36,6 +37,11 @@ function TransactionModal({
   setFormDescripcion,
   formFecha,
   setFormFecha,
+  cuentas,
+  formCuentaId,
+  setFormCuentaId,
+  formCuentaDestinoId,
+  setFormCuentaDestinoId,
 }) {
   const montoFormat = formMonto ? formatearMonto(Number(formMonto)) : "";
   function handleMontoChange(text) {
@@ -50,12 +56,38 @@ function TransactionModal({
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [accountModalVisible, setAccountModalVisible] = useState(false);
+  const [accountPickerTarget, setAccountPickerTarget] = useState("account");
 
   async function handleSave() {
     const montoValue = Number(formMonto);
     const missingMonto =
       !formMonto || Number.isNaN(montoValue) || montoValue <= 0;
     const missingCategoria = !formCategoria;
+
+    if (formType === "transferencia") {
+      const origen = cuentas.find((cuenta) => cuenta.id === formCuentaId);
+      const destino = cuentas.find(
+        (cuenta) => cuenta.id === formCuentaDestinoId,
+      );
+
+      if (missingMonto || !origen || !destino || origen.id === destino.id) {
+        setValidationMessage(
+          "Indica un monto y dos cuentas distintas para la transferencia.",
+        );
+        return;
+      }
+
+      const ok = await saveTransfer({
+        monto: montoValue,
+        fecha: formFecha,
+        origen,
+        destino,
+      });
+      if (ok) handleOpen();
+      else setValidationMessage("No se pudo guardar la transferencia.");
+      return;
+    }
 
     if (missingMonto && missingCategoria) {
       setValidationMessage(
@@ -82,6 +114,7 @@ function TransactionModal({
       categoria: formCategoria,
       descripcion: formDescripcion,
       fecha: formFecha,
+      cuenta_id: formCuentaId,
     };
 
     const ok = await saveTransaction(payload, editingTransaction?.id);
@@ -95,8 +128,16 @@ function TransactionModal({
     setSelectedCategory(false);
     setValidationMessage("");
     setCategoryModalVisible(false);
+    setAccountModalVisible(false);
+    setFormCuentaDestinoId(null);
+    setAccountPickerTarget("account");
     closeModal();
   }
+
+  const selectedAccount = cuentas.find((cuenta) => cuenta.id === formCuentaId);
+  const transferDestination = cuentas.find(
+    (cuenta) => cuenta.id === formCuentaDestinoId,
+  );
 
   const [expanded, setExpanded] = useState(null);
 
@@ -129,7 +170,7 @@ function TransactionModal({
                     <Pressable
                       style={styles.iconDelete}
                       onPress={() => {
-                        deleteTransaction(editingTransaction.id);
+                        deleteTransaction(editingTransaction);
                         handleOpen();
                       }}
                     >
@@ -174,6 +215,19 @@ function TransactionModal({
               >
                 <Text style={styles.segmentText}>Ingresos</Text>
               </Pressable>
+              <Pressable
+                style={[
+                  styles.segmentButton,
+                  formType === "transferencia" && styles.segmentButtonTransfer,
+                ]}
+                onPress={() => {
+                  setFormType("transferencia");
+                  setFormCategoria("");
+                  setFormDescripcion("");
+                }}
+              >
+                <Text style={styles.segmentText}>Transferencias</Text>
+              </Pressable>
             </View>
 
             {/* formulario */}
@@ -202,66 +256,102 @@ function TransactionModal({
                   onBlur={() => setSelectedMonto(false)}
                 />
 
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderBottomColor: selectedDescription
-                        ? "rgba(79,57,246)"
-                        : "#334155",
-                    },
-                  ]}
-                  placeholder="Descripción"
-                  placeholderTextColor={
-                    selectedDescription
-                      ? "rgba(119,119,255)"
-                      : "rgb(200,200,200)"
-                  }
-                  value={formDescripcion}
-                  onChangeText={setFormDescripcion}
-                  onFocus={() => setSelectedDescription(true)}
-                  onBlur={() => setSelectedDescription(false)}
-                />
-                <Pressable
-                  onPress={() => setShowDatePicker(true)}
-                  style={styles.input}
-                >
-                  <Text style={styles.inputDateText}>
-                    {formFecha || "Fecha YYYY-MM-DD"}
-                  </Text>
-                </Pressable>
-
-                <View
-                  style={[
-                    styles.categoryInputRow,
-                    {
-                      borderBottomColor: selectedCategory
-                        ? "rgba(79,57,246)"
-                        : "#334155",
-                    },
-                  ]}
-                >
+                {formType !== "transferencia" && (
                   <TextInput
-                    style={[styles.input, styles.categoryTextInput]}
-                    placeholder="Categoría"
+                    style={[
+                      styles.input,
+                      {
+                        borderBottomColor: selectedDescription
+                          ? "rgba(79,57,246)"
+                          : "#334155",
+                      },
+                    ]}
+                    placeholder="Descripción"
                     placeholderTextColor={
-                      selectedCategory
+                      selectedDescription
                         ? "rgba(119,119,255)"
                         : "rgb(200,200,200)"
                     }
-                    value={formCategoria}
-                    onChangeText={setFormCategoria}
-                    onFocus={() => setSelectedCategory(true)}
-                    onBlur={() => setSelectedCategory(false)}
+                    value={formDescripcion}
+                    onChangeText={setFormDescripcion}
+                    onFocus={() => setSelectedDescription(true)}
+                    onBlur={() => setSelectedDescription(false)}
                   />
+                )}
+                {formType !== "transferencia" && (
                   <Pressable
-                    accessibilityLabel="Abrir categorías"
-                    onPress={() => setCategoryModalVisible(true)}
-                    style={styles.categoryPickerButton}
+                    onPress={() => setShowDatePicker(true)}
+                    style={styles.input}
                   >
+                    <Text style={styles.inputDateText}>
+                      {formFecha || "Fecha YYYY-MM-DD"}
+                    </Text>
+                  </Pressable>
+                )}
+
+                <Pressable
+                  style={styles.accountInput}
+                  onPress={() => {
+                    setAccountPickerTarget("account");
+                    setAccountModalVisible(true);
+                  }}
+                >
+                  <Text style={styles.accountInputLabel}>
+                    {formType === "transferencia" ? "Cuenta origen" : "Cuenta"}
+                  </Text>
+                  <Text style={styles.accountInputValue}>
+                    {selectedAccount?.nombre || "Selecciona una cuenta"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={22} color="white" />
+                </Pressable>
+
+                {formType === "transferencia" ? (
+                  <Pressable
+                    style={styles.accountInput}
+                    onPress={() => {
+                      setAccountPickerTarget("destination");
+                      setAccountModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.accountInputLabel}>Cuenta destino</Text>
+                    <Text style={styles.accountInputValue}>
+                      {transferDestination?.nombre || "Selecciona una cuenta"}
+                    </Text>
                     <Ionicons name="chevron-down" size={22} color="white" />
                   </Pressable>
-                </View>
+                ) : (
+                  <View
+                    style={[
+                      styles.categoryInputRow,
+                      {
+                        borderBottomColor: selectedCategory
+                          ? "rgba(79,57,246)"
+                          : "#334155",
+                      },
+                    ]}
+                  >
+                    <TextInput
+                      style={[styles.input, styles.categoryTextInput]}
+                      placeholder="Categoría"
+                      placeholderTextColor={
+                        selectedCategory
+                          ? "rgba(119,119,255)"
+                          : "rgb(200,200,200)"
+                      }
+                      value={formCategoria}
+                      onChangeText={setFormCategoria}
+                      onFocus={() => setSelectedCategory(true)}
+                      onBlur={() => setSelectedCategory(false)}
+                    />
+                    <Pressable
+                      accessibilityLabel="Abrir categorías"
+                      onPress={() => setCategoryModalVisible(true)}
+                      style={styles.categoryPickerButton}
+                    >
+                      <Ionicons name="chevron-down" size={22} color="white" />
+                    </Pressable>
+                  </View>
+                )}
 
                 {validationMessage ? (
                   <Text style={styles.validationText}>{validationMessage}</Text>
@@ -419,6 +509,65 @@ function TransactionModal({
                   </View>
                 </View>
               </Modal>
+
+              <Modal
+                visible={accountModalVisible}
+                animationType="slide"
+                transparent
+                onRequestClose={() => setAccountModalVisible(false)}
+              >
+                <View style={styles.categoryModalBackdrop}>
+                  <View style={styles.accountModalCard}>
+                    <View style={styles.categoryModalHeader}>
+                      <Text style={styles.categoryModalTitle}>
+                        {accountPickerTarget === "destination"
+                          ? "Cuenta destino"
+                          : "Tus cuentas"}
+                      </Text>
+                      <Pressable
+                        onPress={() => setAccountModalVisible(false)}
+                        style={styles.closeButton}
+                      >
+                        <Ionicons name="close" size={22} color="white" />
+                      </Pressable>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                      {cuentas.map((cuenta) => (
+                        <View key={cuenta.id} style={styles.accountItem}>
+                          <Pressable
+                            style={styles.accountSelect}
+                            onPress={() => {
+                              if (accountPickerTarget === "destination") {
+                                setFormCuentaDestinoId(cuenta.id);
+                              } else {
+                                setFormCuentaId(cuenta.id);
+                              }
+                              setAccountModalVisible(false);
+                            }}
+                          >
+                            <Ionicons
+                              name={
+                                cuenta.id ===
+                                (accountPickerTarget === "destination"
+                                  ? formCuentaDestinoId
+                                  : formCuentaId)
+                                  ? "radio-button-on"
+                                  : "radio-button-off"
+                              }
+                              size={20}
+                              color="rgb(119, 119, 255)"
+                            />
+                            <Text style={styles.accountName}>
+                              {cuenta.nombre}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
             </KeyboardAvoidingView>
           </View>
         </View>
@@ -501,6 +650,9 @@ const styles = StyleSheet.create({
   },
   segmentButtonIngresos: {
     backgroundColor: " rgb(0, 212, 146)",
+  },
+  segmentButtonTransfer: {
+    backgroundColor: "rgb(79, 57, 246)",
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
   },
@@ -543,6 +695,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  accountInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+    marginBottom: 10,
+  },
+  accountInputLabel: { color: "#94a3b8", fontSize: 14 },
+  accountInputValue: { flex: 1, color: "#f8fafc", fontSize: 17 },
   // Modal de categorias
   categoryModalBackdrop: {
     flex: 1,
@@ -560,6 +723,31 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderColor: "#1e293b",
   },
+  accountModalCard: {
+    maxHeight: "78%",
+    backgroundColor: "rgba(20, 23, 28, 0.98)",
+    padding: 16,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: "#1e293b",
+  },
+  accountItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  accountSelect: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  accountName: { color: "white", fontSize: 16 },
   categoryModalHeader: {
     flexDirection: "row",
     alignItems: "center",

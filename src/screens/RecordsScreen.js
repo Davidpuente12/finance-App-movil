@@ -23,6 +23,7 @@ function RecordsScreen({
   setFilterYear,
   filterMonth,
   setFilterMonth,
+  cuentas,
 }) {
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [showYearModal, setShowYearModal] = useState(false);
@@ -151,6 +152,7 @@ function RecordsScreen({
             <TransactionRow
               key={String(item.id)}
               item={item}
+              cuentas={cuentas}
               onEdit={() => openEditModal(item)}
             />
           ))

@@ -70,15 +70,22 @@ const getCategoryIcon = (categoria, tipo) => {
   );
 };
 
-function TransactionRow({ item, onEdit }) {
+function TransactionRow({ item, cuentas, onEdit }) {
+  const accountName = cuentas?.find(
+    (cuenta) => cuenta.id === item.cuenta_id,
+  )?.nombre;
+
   return (
     <Pressable style={styles.transactionRow} onPress={onEdit}>
       {getCategoryIcon(item.categoria, item.tipo)}
       <View style={styles.transactionInfo}>
         <Text style={styles.transactionTitle}>{item.categoria}</Text>
-        <Text style={styles.transactionSubtitle}>
-          {item.descripcion || item.categoria}
-        </Text>
+        {accountName ? (
+          <Text style={styles.accountName}>{accountName}</Text>
+        ) : null}
+        {item.descripcion ? (
+          <Text style={styles.transactionSubtitle}>{item.descripcion}</Text>
+        ) : null}
       </View>
       <View style={styles.transactionActions}>
         <Text
@@ -108,14 +115,15 @@ const styles = StyleSheet.create({
   },
   transactionInfo: { flex: 1, gap: 4 },
   transactionTitle: { color: "#f8fafc", fontSize: 17, fontWeight: "600" },
+  accountName: { color: "#cbd5e1", fontSize: 13, fontWeight: "600" },
   transactionSubtitle: { color: "#94a3b8", fontSize: 13 },
   transactionActions: { alignItems: "flex-end", gap: 6 },
   transactionAmount: { fontWeight: "700", fontSize: 16 },
   amountPositive: { color: "#34d399" },
   amountNegative: { color: "#fb7185" },
   categoryIcon: {
-    width: 38,
-    height: 38,
+    width: 42,
+    height: 42,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",

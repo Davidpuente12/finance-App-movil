@@ -7,17 +7,13 @@ function Balance({
   balanceTotal,
   totalIngresosMensual,
   totalGastosMensual,
-  saldoDisponible,
+
   filterMonth,
   filterYear,
 }) {
   return (
     <View style={styles.section}>
-      <View style={styles.seccionSaldo}>
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <Text style={styles.texto}>Saldo disponible</Text>
-          <Text style={styles.saldo}>{formatearMonto(saldoDisponible)}</Text>
-        </View>
+      <View style={styles.seccionFecha}>
         <Text style={styles.sectionDate}>
           {getMonthYearFiltered(filterMonth, filterYear)}
         </Text>
@@ -50,25 +46,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#1e293b",
     marginHorizontal: 8,
-    marginTop: 8,
     borderRadius: 12,
-    gap: 10,
   },
-  seccionSaldo: {
+  seccionFecha: {
     padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  texto: {
-    color: "#cbd5e1",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  saldo: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "600",
-    // backgroundColor: "#34d399",
   },
   sectionDate: { color: "#cbd5e1", fontSize: 16 },
   cardsRow: {

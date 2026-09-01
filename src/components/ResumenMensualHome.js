@@ -22,15 +22,23 @@ function getParentCategory(category) {
   );
 }
 
-function ResumenMensualHome({
-  selectedMonthItems,
-  totalIngresosMensual,
-  totalGastosMensual,
-}) {
+function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  const totalGastosReales = useMemo(
+    () =>
+      selectedMonthItems
+        .filter(
+          (item) => item.tipo === "gasto" && item.categoria !== "Transferencia",
+        )
+        .reduce((total, item) => total + item.monto, 0),
+    [selectedMonthItems],
+  );
+
   const monthExpenseCategories = useMemo(() => {
-    const expenses = selectedMonthItems.filter((item) => item.tipo === "gasto");
+    const expenses = selectedMonthItems.filter(
+      (item) => item.tipo === "gasto" && item.categoria !== "Transferencia",
+    );
     const totals = new Map();
 
     expenses.forEach((item) => {
@@ -47,7 +55,7 @@ function ResumenMensualHome({
           (c) => c.name.toLowerCase() === category,
         );
         const porcentajeSobreGastos =
-          totalGastosMensual > 0 ? (total / totalGastosMensual) * 100 : 0;
+          totalGastosReales > 0 ? (total / totalGastosReales) * 100 : 0;
         const porcentajeSobreIngresos =
           totalIngresosMensual > 0 ? (total / totalIngresosMensual) * 100 : 0;
 
@@ -61,7 +69,7 @@ function ResumenMensualHome({
         };
       })
       .sort((a, b) => b.total - a.total);
-  }, [selectedMonthItems, totalGastosMensual, totalIngresosMensual]);
+  }, [selectedMonthItems, totalGastosReales, totalIngresosMensual]);
 
   const monthExpenseParentCategories = useMemo(() => {
     const totals = new Map();
@@ -120,7 +128,7 @@ function ResumenMensualHome({
 
     for (let i = 0; i < monthExpenseParentCategories.length; i++) {
       const item = monthExpenseParentCategories[i];
-      const portion = item.total / totalGastosMensual;
+      const portion = item.total / totalGastosReales;
       const segmentDegrees = portion * 360;
 
       const startAngle = currentAngle;
@@ -162,7 +170,7 @@ function ResumenMensualHome({
             />
             <DonutSlices
               data={monthExpenseParentCategories}
-              total={totalGastosMensual}
+              total={totalGastosReales}
               selectedCategory={selectedCategory}
             />
           </Svg>
@@ -183,7 +191,7 @@ function ResumenMensualHome({
               <>
                 <Text style={styles.donutLabel}>Gastos</Text>
                 <Text style={styles.donutValue}>
-                  {formatearMonto(totalGastosMensual)}
+                  {formatearMonto(totalGastosReales)}
                 </Text>
               </>
             )}

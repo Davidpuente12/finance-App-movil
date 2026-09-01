@@ -23,6 +23,12 @@ const Tab = createMaterialTopTabNavigator();
 
 async function initializeDatabase(db) {
   await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS cuentas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      color TEXT NOT NULL DEFAULT 'rgb(0, 200, 136)'
+    );
+
     CREATE TABLE IF NOT EXISTS transacciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       tipo TEXT NOT NULL,
@@ -32,6 +38,44 @@ async function initializeDatabase(db) {
       fecha TEXT NOT NULL
     );
   `);
+
+  await db.runAsync("INSERT OR IGNORE INTO cuentas (nombre) VALUES (?);", [
+    "Efectivo",
+  ]);
+
+  const columns = await db.getAllAsync("PRAGMA table_info(transacciones);");
+  const hasAccountId = columns.some((column) => column.name === "cuenta_id");
+
+  const accountColumns = await db.getAllAsync("PRAGMA table_info(cuentas);");
+  const hasAccountColor = accountColumns.some(
+    (column) => column.name === "color",
+  );
+
+  if (!hasAccountId) {
+    await db.execAsync(
+      "ALTER TABLE transacciones ADD COLUMN cuenta_id INTEGER;",
+    );
+  }
+
+  if (!hasAccountColor) {
+    await db.execAsync(
+      "ALTER TABLE cuentas ADD COLUMN color TEXT NOT NULL DEFAULT 'rgb(0, 200, 136)';",
+    );
+  }
+
+  await db.runAsync("UPDATE cuentas SET color=? WHERE nombre=?;", [
+    "rgb(0, 200, 136)",
+    "Efectivo",
+  ]);
+
+  const efectivo = await db.getFirstAsync(
+    "SELECT id FROM cuentas WHERE nombre = ?;",
+    ["Efectivo"],
+  );
+  await db.runAsync(
+    "UPDATE transacciones SET cuenta_id = ? WHERE cuenta_id IS NULL;",
+    [efectivo.id],
+  );
 }
 
 export default function App() {
@@ -43,8 +87,17 @@ export default function App() {
 }
 
 function AppContent() {
-  const { lista, saveTransaction, deleteTransaction, loading } =
-    useSQLiteTransactions();
+  const {
+    lista,
+    cuentas,
+    saveTransaction,
+    saveTransfer,
+    deleteTransaction,
+    createAccount,
+    renameAccount,
+    deleteAccount,
+    loading,
+  } = useSQLiteTransactions();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
@@ -61,6 +114,8 @@ function AppContent() {
   const [formMonto, setFormMonto] = useState("");
   const [formDescripcion, setFormDescripcion] = useState("");
   const [formFecha, setFormFecha] = useState(getTodayDate());
+  const [formCuentaId, setFormCuentaId] = useState(null);
+  const [formCuentaDestinoId, setFormCuentaDestinoId] = useState(null);
 
   const selectedMonthItems = useMemo(() => {
     return lista.filter((item) => {
@@ -82,7 +137,9 @@ function AppContent() {
   const totalGastosMensual = useMemo(
     () =>
       selectedMonthItems
-        .filter((item) => item.tipo === "gasto")
+        .filter(
+          (item) => item.tipo === "gasto" && item.categoria !== "Transferencia",
+        )
         .reduce((acu, item) => acu + item.monto, 0),
     [selectedMonthItems],
   );
@@ -90,19 +147,12 @@ function AppContent() {
   const totalIngresosMensual = useMemo(
     () =>
       selectedMonthItems
-        .filter((item) => item.tipo === "ingreso")
+        .filter(
+          (item) =>
+            item.tipo === "ingreso" && item.categoria !== "Transferencia",
+        )
         .reduce((acu, item) => acu + item.monto, 0),
     [selectedMonthItems],
-  );
-
-  const saldoDisponible = useMemo(
-    () =>
-      lista.reduce((acu, item) => {
-        if (item.tipo === "ingreso") return acu + item.monto;
-        if (item.tipo === "gasto") return acu - item.monto;
-        return acu;
-      }, 0),
-    [lista],
   );
 
   const balanceTotal = totalIngresosMensual - totalGastosMensual;
@@ -158,16 +208,37 @@ function AppContent() {
     setFormMonto("");
     setFormDescripcion("");
     setFormFecha(getTodayDate());
+    setFormCuentaId(
+      cuentas.find((cuenta) => cuenta.nombre === "Efectivo")?.id ?? null,
+    );
+    setFormCuentaDestinoId(null);
     setModalVisible(true);
   };
 
   const openEditModal = (item) => {
+    const isTransfer = item.categoria === "Transferencia";
+    const isTransferIncome =
+      isTransfer && item.descripcion?.startsWith("Transferencia desde ");
+    const accountName = item.descripcion?.replace(
+      isTransferIncome ? "Transferencia desde " : "Transferencia a ",
+      "",
+    );
+    const pairedAccount = cuentas.find(
+      (cuenta) => cuenta.nombre === accountName,
+    );
+
     setEditingTransaction(item);
-    setFormType(item.tipo);
+    setFormType(isTransfer ? "transferencia" : item.tipo);
     setFormMonto(String(item.monto));
     setFormCategoria(item.categoria ?? "");
     setFormDescripcion(item.descripcion ?? "");
     setFormFecha(item.fecha);
+    setFormCuentaId(
+      isTransferIncome ? (pairedAccount?.id ?? null) : item.cuenta_id,
+    );
+    setFormCuentaDestinoId(
+      isTransferIncome ? item.cuenta_id : (pairedAccount?.id ?? null),
+    );
     setModalVisible(true);
   };
 
@@ -212,12 +283,15 @@ function AppContent() {
                     balanceTotal={balanceTotal}
                     totalIngresosMensual={totalIngresosMensual}
                     totalGastosMensual={totalGastosMensual}
-                    saldoDisponible={saldoDisponible}
                     formatearMonto={formatearMonto}
                     openEditModal={openEditModal}
                     openNewModal={openNewModal}
                     filterMonth={filterMonth}
                     filterYear={filterYear}
+                    cuentas={cuentas}
+                    createAccount={createAccount}
+                    renameAccount={renameAccount}
+                    deleteAccount={deleteAccount}
                   />
                 )}
               </Tab.Screen>
@@ -237,6 +311,7 @@ function AppContent() {
                     setFilterMonth={setFilterMonth}
                     filterYear={filterYear}
                     setFilterYear={setFilterYear}
+                    cuentas={cuentas}
                   />
                 )}
               </Tab.Screen>
@@ -262,6 +337,7 @@ function AppContent() {
               editingTransaction={editingTransaction}
               closeModal={closeModal}
               saveTransaction={saveTransaction}
+              saveTransfer={saveTransfer}
               deleteTransaction={deleteTransaction}
               formType={formType}
               setFormType={setFormType}
@@ -273,6 +349,11 @@ function AppContent() {
               setFormDescripcion={setFormDescripcion}
               formFecha={formFecha}
               setFormFecha={setFormFecha}
+              cuentas={cuentas}
+              formCuentaId={formCuentaId}
+              setFormCuentaId={setFormCuentaId}
+              formCuentaDestinoId={formCuentaDestinoId}
+              setFormCuentaDestinoId={setFormCuentaDestinoId}
             />
 
             <Pressable style={styles.fab} onPress={openNewModal}>
