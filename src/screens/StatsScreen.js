@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     color: "#94a3b8",
-    fontSize: 11,
+    fontSize: 10,
   },
   yearGrid: {
     marginTop: 15,
@@ -343,12 +343,12 @@ const styles = StyleSheet.create({
   yearMonthTitle: {
     color: "white",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
     marginBottom: 10,
   },
-  monthlyExpensesTitle: { color: "#fb7185", fontWeight: "800", fontSize: 14 },
-  monthlyIncomeTitle: { color: "#34d399", fontWeight: "800", fontSize: 14 },
-  yearBalanceAmount: { fontWeight: "800", fontSize: 14 },
+  monthlyExpensesTitle: { color: "#fb7185", fontWeight: "600", fontSize: 13 },
+  monthlyIncomeTitle: { color: "#34d399", fontWeight: "600", fontSize: 13 },
+  yearBalanceAmount: { fontWeight: "600", fontSize: 13 },
   yearMetric: {
     flexDirection: "row",
     justifyContent: "space-between",

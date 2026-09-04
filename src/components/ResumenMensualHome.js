@@ -93,7 +93,7 @@ function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
     const { locationX, locationY } = event.nativeEvent;
 
     // El SVG es 250x250 píxeles pero tiene viewBox 0 0 180 180
-    const scale = 180 / 250;
+    const scale = 180 / 260;
     const svgX = locationX * scale;
     const svgY = locationY * scale;
 
@@ -159,7 +159,7 @@ function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
           onPress={handleDonutPress}
           activeOpacity={1}
         >
-          <Svg width={250} height={250} viewBox="0 0 180 180">
+          <Svg width={260} height={260} viewBox="0 0 180 180">
             <Circle
               cx="90"
               cy="90"
@@ -275,8 +275,7 @@ const styles = StyleSheet.create({
     borderColor: "#1e293b",
   },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between" },
-  sectionTitle: { color: "white", fontSize: 18, fontWeight: "500" },
-  sectionDate: { color: "#cbd5e1", fontSize: 16 },
+  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
 
   // Donut
   donutWrap: {
@@ -288,10 +287,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
-    width: 120,
-    height: 120,
+    width: 150,
+    height: 150,
   },
-  donutLabel: { color: "#cbd5e1", fontSize: 14, marginBottom: 4 },
+  donutLabel: { color: "#94a3b8", fontSize: 14, marginBottom: 4 },
   donutValue: {
     color: "white",
     fontSize: 17,
@@ -332,7 +331,7 @@ const styles = StyleSheet.create({
   sectionFooterText: {
     color: "rgb(119, 119, 255)",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "500",
   },
 });
 

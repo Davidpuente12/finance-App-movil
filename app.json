@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "wallet",
+    "name": "Wallet",
     "slug": "wallet",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,17 @@
     },
     "plugins": [
       "expo-font",
-      "expo-sqlite"
+      "expo-sqlite",
+      "@react-native-community/datetimepicker",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./src/assets/icon-wallet.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#4F39F6"
+        }
+      ]
     ],
     "extra": {
       "eas": {

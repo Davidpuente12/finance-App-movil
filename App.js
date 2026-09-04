@@ -255,6 +255,12 @@ function AppContent() {
           <View style={styles.safeArea}>
             <Tab.Navigator
               screenOptions={({ route }) => ({
+                tabBarScrollEnabled: true,
+                tabBarItemStyle: {
+                  // width: "100",
+                  width: "auto",
+                  paddingHorizontal: 25,
+                },
                 headerShown: false,
                 tabBarActiveTintColor: "white",
                 // tabBarInactiveTintColor: "#94a3b8",
@@ -383,7 +389,7 @@ const styles = StyleSheet.create({
     height: 3,
   },
   tabBarLabel: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     marginTop: 2,
   },

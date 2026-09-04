@@ -182,7 +182,7 @@ function TransactionModal({
                     >
                       <Ionicons
                         name="trash-outline"
-                        size={20}
+                        size={21}
                         color="rgb(254, 83, 83)"
                       />
                     </Pressable>
@@ -227,6 +227,7 @@ function TransactionModal({
                 style={[
                   styles.segmentButton,
                   formType === "transferencia" && styles.segmentButtonTransfer,
+                  { flex: 1.5 },
                 ]}
                 onPress={() => {
                   setFormType("transferencia");
@@ -608,19 +609,24 @@ const styles = StyleSheet.create({
   },
 
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  modalTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
+  modalTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "500",
+  },
   closeButton: {
     width: 36,
     height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
-  closeButtonText: { color: "#e2e8f0", fontSize: 18, lineHeight: 20 },
+  closeButtonText: { color: "#e2e8f0", fontSize: 15, lineHeight: 20 },
   actionBar: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    // backgroundColor: "red",
   },
   iconDelete: {
     alignItems: "center",
@@ -630,16 +636,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sendButton: {
-    flex: 1,
+    // flex: 1,
     alignItems: "center",
     justifyContent: "flex-end",
   },
   iconSend: {
     color: "rgb(119, 119, 255)",
-    fontWeight: "800",
-    fontSize: 18,
+    fontWeight: "500",
+    fontSize: 17,
     marginLeft: "auto",
   },
+  // Action bar
   segmented: {
     flexDirection: "row",
     marginBottom: 14,
@@ -665,9 +672,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
   },
-  segmentText: { color: "white", fontWeight: "600", fontSize: 16 },
+  segmentText: { color: "white", fontWeight: "400", fontSize: 17 },
   input: {
-    fontSize: 17,
+    fontSize: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#334155",
     padding: 18,
@@ -676,16 +683,15 @@ const styles = StyleSheet.create({
   },
   inputDateText: {
     color: "rgb(200,200,200)",
-    fontSize: 17,
+    fontSize: 16,
   },
   validationText: {
     color: "#fda4af",
-    fontSize: 14,
+    fontSize: 15,
     marginBottom: 10,
     marginHorizontal: 4,
   },
   // iconos de categorias
-  inputCategorias: { color: "rgb(200,200,200)", fontSize: 17 },
   categoryInputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -714,7 +720,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   accountInputLabel: { color: "#94a3b8", fontSize: 14 },
-  accountInputValue: { flex: 1, color: "#f8fafc", fontSize: 17 },
+  accountInputValue: { flex: 1, color: "#f8fafc", fontSize: 16 },
   // Modal de categorias
   categoryModalBackdrop: {
     flex: 1,
@@ -766,7 +772,7 @@ const styles = StyleSheet.create({
   categoryModalTitle: {
     color: "white",
     fontSize: 17,
-    fontWeight: "800",
+    fontWeight: "700",
   },
   backCategoryButton: {
     flexDirection: "row",
@@ -792,7 +798,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   categoryItem: {
-    width: 170,
+    width: "180",
     height: 55,
     flexDirection: "row",
     borderRadius: 10,

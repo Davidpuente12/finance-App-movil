@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,6 +25,10 @@ const accountColors = [
   "#2498f2",
   "#fba716",
   "#84cc16",
+  "#db2777",
+  "#9333ea",
+  "#0891b2",
+  "#ea580c",
 ];
 
 function HomeScreen({
@@ -69,11 +74,41 @@ function HomeScreen({
   const navigation = useNavigation();
 
   const handleSaveAccount = async () => {
+    const normalizedName = accountName.trim();
+    if (!normalizedName) {
+      Alert.alert("Nombre requerido", "Escribe un nombre para la cuenta");
+      return;
+    }
+
+    const duplicatedAccount = cuentas.some(
+      (cuenta) =>
+        cuenta.id !== editingAccount?.id &&
+        cuenta.nombre.trim().toLocaleLowerCase() ===
+          normalizedName.toLocaleLowerCase(),
+    );
+    if (duplicatedAccount) {
+      Alert.alert("Nombre duplicado", "Ya existe una cuenta con ese nombre");
+      return;
+    }
+
+    if (!editingAccount && cuentas.length >= 10) {
+      Alert.alert(
+        "Límite de cuentas",
+        "Solo puedes tener 10 cuentas registradas",
+      );
+      return;
+    }
+
     const account = editingAccount
       ? await renameAccount(editingAccount.id, accountName, accountColor)
       : await createAccount(accountName, accountColor);
 
     if (account) {
+      if (!editingAccount) {
+        closeAccountsModal();
+        return;
+      }
+
       setAccountName("");
       setAccountColor(accountColors[0]);
       setEditingAccount(null);
@@ -107,7 +142,7 @@ function HomeScreen({
             onPress={() => setAccountsModalVisible(true)}
             style={styles.addAccountButton}
           >
-            <Text style={styles.addAccountButtonText}>Añadir cuenta</Text>
+            <Text style={styles.addAccountButtonText}>Añadir cuentas</Text>
           </Pressable>
         </View>
         <View style={styles.accountsList}>
@@ -195,7 +230,7 @@ function HomeScreen({
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Administrar cuentas</Text>
               <Pressable onPress={closeAccountsModal} hitSlop={8}>
-                <Text style={styles.closeButton}>×</Text>
+                <Text style={styles.closeButton}>⨉</Text>
               </Pressable>
             </View>
             <View style={styles.accountForm}>
@@ -212,10 +247,6 @@ function HomeScreen({
               <Pressable
                 style={styles.accountSaveButton}
                 onPress={handleSaveAccount}
-                disabled={
-                  !accountName.trim() ||
-                  (!editingAccount && cuentas.length >= 10)
-                }
               >
                 <Text style={styles.accountSaveButtonText}>
                   {editingAccount ? "Guardar" : "Añadir"}
@@ -342,8 +373,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 5,
   },
-  sectionTitle: { color: "white", fontSize: 18, fontWeight: "500" },
-  sectionMeta: { color: "#94a3b8", fontSize: 12 },
+  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
   loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
   loadingText: { color: "#cbd5e1" },
 
@@ -358,14 +388,14 @@ const styles = StyleSheet.create({
   sectionFooterText: {
     color: "rgb(119, 119, 255)",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   // seccion de cuentas
   addAccountButton: { paddingVertical: 6, paddingHorizontal: 10 },
   addAccountButtonText: {
     color: "rgb(119, 119, 255)",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "500",
   },
   accountsList: {
     flexDirection: "row",
@@ -380,18 +410,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.25)",
   },
-  accountCardName: { color: "white", fontSize: 17, fontWeight: "700" },
+  accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
   accountCardLabel: { color: "#fcfdfe", fontSize: 12, marginTop: 5 },
   accountCardBalance: {
     color: "#f8fafc",
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "500",
   },
   modalBackdrop: {
     flex: 1,
     justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.6)",
-    marginBottom: 49,
+    marginBottom: 48,
   },
   accountsModalCard: {
     maxHeight: "78%",
@@ -400,7 +430,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
-  closeButton: { color: "white", fontSize: 28, lineHeight: 28 },
+  closeButton: { color: "white", fontSize: 15, lineHeight: 28 },
   accountForm: { flexDirection: "row", gap: 8, marginVertical: 16 },
   colorPicker: { flexDirection: "row", gap: 12, marginBottom: 16 },
   colorSwatch: {
@@ -435,7 +465,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#334155",
   },
   accountManageInfo: { flex: 1 },
-  accountManageName: { color: "white", fontSize: 16, fontWeight: "700" },
+  accountManageName: { color: "white", fontSize: 16, fontWeight: "500" },
   accountManageBalance: { color: "#94a3b8", marginTop: 3 },
   accountAction: { paddingVertical: 6, paddingHorizontal: 4 },
   accountActionText: { color: "#cbd5e1", fontWeight: "700" },

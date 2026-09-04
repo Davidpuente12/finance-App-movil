@@ -122,7 +122,7 @@ function ResumenMensual({
     const { locationX, locationY } = event.nativeEvent;
 
     // El SVG es 250x250 píxeles pero tiene viewBox 0 0 180 180
-    const scale = 180 / 250;
+    const scale = 180 / 280;
     const svgX = locationX * scale;
     const svgY = locationY * scale;
 
@@ -195,7 +195,7 @@ function ResumenMensual({
           onPress={handleDonutPress}
           activeOpacity={1}
         >
-          <Svg width={250} height={250} viewBox="0 0 180 180">
+          <Svg width={280} height={280} viewBox="0 0 180 180">
             <Circle
               cx="90"
               cy="90"
@@ -237,7 +237,7 @@ function ResumenMensual({
 
       <View style={styles.legendList}>
         <View style={styles.legendTitle}>
-          <Text style={styles.neutral}>% sobre gasto / ingreso</Text>
+          <Text style={styles.neutral}>% Gastos / Ingresos</Text>
         </View>
         {monthExpenseCategories.length === 0 ? (
           <Text style={styles.emptyText}>
@@ -323,6 +323,8 @@ const styles = StyleSheet.create({
   monthSummaryRow: {
     gap: 14,
   },
+
+  // Donut
   donutWrap: {
     alignItems: "center",
     justifyContent: "center",
@@ -332,14 +334,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
-    width: 120,
-    height: 120,
+    width: 150,
+    height: 150,
   },
-  donutLabel: { color: "#94a3b8", fontSize: 13, marginBottom: 4 },
+  donutLabel: { color: "#94a3b8", fontSize: 14, marginBottom: 4 },
   donutValue: {
-    color: "#f8fafc",
+    color: "white",
     fontSize: 17,
-    fontWeight: "800",
+    fontWeight: "600",
     textAlign: "center",
   },
   legendList: { gap: 5, marginTop: 4 },
@@ -354,8 +356,12 @@ const styles = StyleSheet.create({
     borderColor: "rgb(32, 32, 38)",
   },
   legendLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  legendText: { color: "white", flexShrink: 1, fontSize: 17 },
-  legendAmount: { color: "#f8fafc", fontWeight: "700", fontSize: 15 },
+  legendText: {
+    color: "white",
+    flexShrink: 1,
+    fontSize: 16,
+  },
+  legendAmount: { color: "#f8fafc", fontWeight: "600", fontSize: 15 },
   positive: { color: "#34d399", fontSize: 15 },
   negative: { color: "#fb7185", fontSize: 15 },
   neutral: { color: "#7dd3fc" },

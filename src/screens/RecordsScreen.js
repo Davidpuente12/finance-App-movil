@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 18, fontWeight: "700" },
+  sectionTitle: { color: "#f8fafc", fontSize: 17, fontWeight: "500" },
   sectionMeta: { color: "#94a3b8", fontSize: 12 },
   filters: { gap: 10 },
   input: {
@@ -262,15 +262,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 17,
+    fontWeight: "500",
     marginBottom: 12,
     textAlign: "center",
     color: "white",
   },
   closeButtonText: {
     color: "#fff",
-    fontSize: 17,
+    fontSize: 15,
   },
   gridContainer: {
     flexDirection: "row",
@@ -285,9 +285,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   gridItemText: {
-    fontSize: 17,
+    fontSize: 15,
     color: "rgb(119, 119, 255)",
-    fontWeight: "700",
+    fontWeight: "500",
   },
 });
 

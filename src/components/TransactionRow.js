@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
     borderBottomColor: "#1f2937",
   },
   transactionInfo: { flex: 1, gap: 4 },
-  transactionTitle: { color: "#f8fafc", fontSize: 17, fontWeight: "600" },
+  transactionTitle: { color: "#f8fafc", fontSize: 16, fontWeight: "600" },
   accountName: { color: "#cbd5e1", fontSize: 13, fontWeight: "600" },
   transactionSubtitle: { color: "#94a3b8", fontSize: 13 },
   transactionActions: { alignItems: "flex-end", gap: 6 },
-  transactionAmount: { fontWeight: "700", fontSize: 16 },
+  transactionAmount: { fontWeight: "600", fontSize: 16 },
   amountPositive: { color: "#34d399" },
   amountNegative: { color: "#fb7185" },
   categoryIcon: {
