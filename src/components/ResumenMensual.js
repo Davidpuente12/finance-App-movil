@@ -48,6 +48,10 @@ function getParentCategory(category) {
   );
 }
 
+function formatCategoryName(category) {
+  return category.length > 10 ? `${category.slice(0, 10)}...` : category;
+}
+
 function ResumenMensual({
   selectedMonthItems,
   totalIngresosMensual,
@@ -185,7 +189,7 @@ function ResumenMensual({
         </View>
 
         <Text style={styles.description}>
-          {selectedMonthItems.length} movimientos en el mes seleccionado.
+          {selectedMonthItems.length} movimientos
         </Text>
       </View>
 
@@ -237,7 +241,7 @@ function ResumenMensual({
 
       <View style={styles.legendList}>
         <View style={styles.legendTitle}>
-          <Text style={styles.neutral}>% Gastos / Ingresos</Text>
+          <Text style={{ color: "#7dd3fc" }}>% Gastos / Ingresos</Text>
         </View>
         {monthExpenseCategories.length === 0 ? (
           <Text style={styles.emptyText}>
@@ -250,19 +254,23 @@ function ResumenMensual({
                 {item.icon &&
                   React.cloneElement(item.icon, { color: item.color })}
 
-                <Text style={styles.legendText}>{item.category}</Text>
-              </View>
-              <View style={styles.legendLeft}>
-                <Text style={styles.legendAmount}>
-                  {formatearMonto(item.total)}
-                </Text>
-                <Text style={styles.negative}>
-                  {item.porcentajeSobreGastos.toFixed()}%
-                </Text>
-                <Text style={styles.positive}>
-                  {item.porcentajeSobreIngresos.toFixed()}%
+                <Text
+                  style={styles.legendText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {formatCategoryName(item.category)}
                 </Text>
               </View>
+              <Text style={[styles.legendAmount, styles.legendAmountColumn]}>
+                {formatearMonto(item.total)}
+              </Text>
+              <Text style={[styles.negative, styles.legendPercentageColumn]}>
+                {item.porcentajeSobreGastos.toFixed()}%
+              </Text>
+              <Text style={[styles.positive, styles.legendPercentageColumn]}>
+                {item.porcentajeSobreIngresos.toFixed()}%
+              </Text>
             </View>
           ))
         )}
@@ -345,26 +353,37 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   legendList: { gap: 5, marginTop: 4 },
-  legendTitle: { flexDirection: "row", justifyContent: "flex-end" },
+  legendTitle: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 10,
+  },
   emptyText: { color: "#94a3b8", paddingVertical: 6 },
   legendItem: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 12,
+    padding: 10,
     borderBottomWidth: 1,
     borderColor: "rgb(32, 32, 38)",
   },
-  legendLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  legendLeft: {
+    flex: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   legendText: {
-    color: "white",
+    color: "#e2e2e2",
     flexShrink: 1,
     fontSize: 16,
   },
-  legendAmount: { color: "#f8fafc", fontWeight: "600", fontSize: 15 },
-  positive: { color: "#34d399", fontSize: 15 },
-  negative: { color: "#fb7185", fontSize: 15 },
-  neutral: { color: "#7dd3fc" },
+  legendAmount: { color: "#f8fafc", fontWeight: "500", fontSize: 15 },
+  legendAmountColumn: { flex: 2, textAlign: "center" },
+  legendPercentageColumn: {
+    flex: 0.9,
+    textAlign: "right",
+  },
+  positive: { color: "#34d399", fontSize: 14 },
+  negative: { color: "#fb7185", fontSize: 14 },
 });
 
 export { ResumenMensual };

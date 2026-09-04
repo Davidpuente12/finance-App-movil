@@ -12,10 +12,10 @@ function MetricCard({ label, value, tone }) {
 const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
-    padding: 10,
+    alignItems: "center",
   },
   metricLabel: { color: "#94a3b8", fontSize: 13 },
-  metricValue: { fontSize: 17, fontWeight: "700" },
+  metricValue: { fontSize: 16, fontWeight: "700" },
   primary: { color: "#38bdf8" },
   green: { color: "#34d399" },
   red: { color: "#fb7185" },

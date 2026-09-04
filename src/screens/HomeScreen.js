@@ -12,11 +12,14 @@ import {
   Platform,
 } from "react-native";
 import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 
 import { Balance } from "../components/Balance";
 import { TransactionRow } from "../components/TransactionRow";
 import { ResumenMensualHome } from "../components/ResumenMensualHome";
 import { useNavigation } from "@react-navigation/native";
+import { mesesMap, yearsArray } from "../utils/fechaActual";
+// import { getMonthYearFiltered } from "../utils/fechaActual";
 
 const accountColors = [
   "rgb(79, 57, 246)",
@@ -42,6 +45,8 @@ function HomeScreen({
   deleteTransaction,
   filterMonth,
   filterYear,
+  setFilterMonth,
+  setFilterYear,
   cuentas,
   lista,
   createAccount,
@@ -53,6 +58,9 @@ function HomeScreen({
   const [accountColor, setAccountColor] = useState(accountColors[0]);
   const [editingAccount, setEditingAccount] = useState(null);
   const [accountToDelete, setAccountToDelete] = useState(null);
+  const [showMonthModal, setShowMonthModal] = useState(false);
+  const [showYearModal, setShowYearModal] = useState(false);
+  const mesesArray = Object.keys(mesesMap);
   const latestTransactions = [...selectedMonthItems].sort((a, b) => {
     const dateDifference = new Date(b.fecha) - new Date(a.fecha);
     if (dateDifference !== 0) return dateDifference;
@@ -163,6 +171,25 @@ function HomeScreen({
         </View>
       </View>
 
+      <View style={styles.dateSelector}>
+        <Pressable
+          accessibilityLabel="Seleccionar mes"
+          onPress={() => setShowMonthModal(true)}
+          style={styles.dateSelectorButton}
+        >
+          <Text style={styles.dateSelectorText}>{filterMonth}</Text>
+          <Ionicons name="chevron-down" size={20} color="rgb(102, 83, 249)" />
+        </Pressable>
+        <Pressable
+          accessibilityLabel="Seleccionar año"
+          onPress={() => setShowYearModal(true)}
+          style={styles.dateSelectorButton}
+        >
+          <Text style={styles.dateSelectorText}>{filterYear}</Text>
+          <Ionicons name="chevron-down" size={20} color="rgb(102, 83, 249)" />
+        </Pressable>
+      </View>
+
       <Balance
         balanceTotal={balanceTotal}
         totalIngresosMensual={totalIngresosMensual}
@@ -170,6 +197,7 @@ function HomeScreen({
         filterMonth={filterMonth}
         filterYear={filterYear}
       />
+      {/* </View> */}
 
       <ResumenMensualHome
         selectedMonthItems={selectedMonthItems}
@@ -307,6 +335,74 @@ function HomeScreen({
       </Modal>
 
       <Modal
+        visible={showMonthModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMonthModal(false)}
+      >
+        <View style={styles.dateModalBackdrop}>
+          <View style={styles.dateModalCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Selecciona un mes</Text>
+              <Pressable onPress={() => setShowMonthModal(false)} hitSlop={8}>
+                <Text style={styles.closeButton}>⨉</Text>
+              </Pressable>
+            </View>
+            <View style={styles.monthGrid}>
+              {mesesArray.map((mes) => (
+                <Pressable
+                  key={mes}
+                  onPress={() => {
+                    setFilterMonth(mes);
+                    setShowMonthModal(false);
+                  }}
+                  style={styles.monthOption}
+                >
+                  <Text style={styles.monthOptionText}>{mes}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showYearModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowYearModal(false)}
+      >
+        <View style={styles.dateModalBackdrop}>
+          <View style={styles.dateModalCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Selecciona un año</Text>
+              <Pressable onPress={() => setShowYearModal(false)} hitSlop={8}>
+                <Text style={styles.closeButton}>⨉</Text>
+              </Pressable>
+            </View>
+            <ScrollView style={styles.yearList}>
+              {yearsArray.map((year) => (
+                <Pressable
+                  key={year}
+                  onPress={() => {
+                    setFilterYear(year.toString());
+                    setShowYearModal(false);
+                  }}
+                  style={styles.yearOption}
+                >
+                  <Text
+                    style={{ color: "rgb(119, 119, 255)", fontWeight: 500 }}
+                  >
+                    {year}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
         visible={Boolean(accountToDelete)}
         transparent
         animationType="fade"
@@ -390,6 +486,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
+  //  Botones y modales para mes y año
+  dateSelector: {
+    flexDirection: "row",
+    gap: 8,
+    marginHorizontal: 8,
+  },
+  dateSelectorButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#1e293b",
+    backgroundColor: "rgb(20, 23, 28)",
+  },
+  dateSelectorText: { color: "#f8fafc", fontSize: 16, fontWeight: "500" },
+  dateModalBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+  },
+  dateModalCard: {
+    padding: 12,
+    gap: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#1e293b",
+    backgroundColor: "rgb(20, 23, 28)",
+  },
+  monthGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+    justifyContent: "space-between",
+  },
+  monthOption: {
+    width: "32%",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(79, 57, 246, 0.7)",
+  },
+  monthOptionText: {
+    color: "rgb(189, 189, 252)",
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  yearList: { maxHeight: 300 },
+  yearOption: {
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
   // seccion de cuentas
   addAccountButton: { paddingVertical: 6, paddingHorizontal: 10 },
   addAccountButtonText: {
@@ -407,8 +561,8 @@ const styles = StyleSheet.create({
     minHeight: 90,
     padding: 8,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.25)",
+    elevation: 4,
+    shadowColor: "#000000",
   },
   accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
   accountCardLabel: { color: "#fcfdfe", fontSize: 12, marginTop: 5 },

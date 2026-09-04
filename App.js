@@ -257,7 +257,6 @@ function AppContent() {
               screenOptions={({ route }) => ({
                 tabBarScrollEnabled: true,
                 tabBarItemStyle: {
-                  // width: "100",
                   width: "auto",
                   paddingHorizontal: 25,
                 },
@@ -294,6 +293,8 @@ function AppContent() {
                     openNewModal={openNewModal}
                     filterMonth={filterMonth}
                     filterYear={filterYear}
+                    setFilterMonth={setFilterMonth}
+                    setFilterYear={setFilterYear}
                     cuentas={cuentas}
                     createAccount={createAccount}
                     renameAccount={renameAccount}
