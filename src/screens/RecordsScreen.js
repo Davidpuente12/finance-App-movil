@@ -18,7 +18,7 @@ function RecordsScreen({
       <View style={styles.sectionFilter}>
         <TextInput
           style={styles.input}
-          placeholder="Buscar por concepto o categoría"
+          placeholder="Busca por descripción o categoría"
           placeholderTextColor="#64748b"
           value={searchQuery}
           onChangeText={setSearchQuery}

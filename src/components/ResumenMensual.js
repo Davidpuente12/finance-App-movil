@@ -122,6 +122,23 @@ function ResumenMensual({
     return Array.from(totals.values()).sort((a, b) => b.total - a.total);
   }, [monthExpenseCategories]);
 
+  const selectedCategoryExpenses = useMemo(() => {
+    if (!selectedCategory) return [];
+
+    return selectedMonthItems.filter((item) => {
+      if (item.tipo !== "gasto" || item.categoria === "Transferencia") {
+        return false;
+      }
+
+      const parentCategory = getParentCategory(
+        item.categoria.trim().toLowerCase(),
+      );
+      const category = parentCategory?.name || item.categoria;
+
+      return category === selectedCategory;
+    });
+  }, [selectedCategory, selectedMonthItems]);
+
   const handleDonutPress = (event) => {
     const { locationX, locationY } = event.nativeEvent;
 
@@ -239,6 +256,7 @@ function ResumenMensual({
         </TouchableOpacity>
       </View>
 
+      {/* Leyenda */}
       <View style={styles.legendList}>
         <View style={styles.legendTitle}>
           <Text style={{ color: "#7dd3fc" }}>% Gastos / Ingresos</Text>
@@ -247,6 +265,70 @@ function ResumenMensual({
           <Text style={styles.emptyText}>
             No hay gastos en el mes seleccionado.
           </Text>
+        ) : selectedCategory ? (
+          selectedCategoryExpenses.map((item, index) => {
+            const categoryInfo = getCategoryInfo(
+              item.categoria.trim().toLowerCase(),
+            );
+            const porcentajeSobreGastos =
+              totalGastosReales > 0
+                ? (item.monto / totalGastosReales) * 100
+                : 0;
+            const porcentajeSobreIngresos =
+              totalIngresosMensual > 0
+                ? (item.monto / totalIngresosMensual) * 100
+                : 0;
+
+            return (
+              <View
+                key={item.id ?? `${item.fecha}-${item.categoria}-${index}`}
+                style={styles.legendItem}
+              >
+                <View style={styles.legendLeft}>
+                  {categoryInfo.icon &&
+                    React.cloneElement(categoryInfo.icon, {
+                      color: categoryInfo.color,
+                    })}
+
+                  <View style={styles.legendMovementInfo}>
+                    <Text
+                      style={styles.legendText}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {item.categoria}
+                    </Text>
+                    {item.descripcion && (
+                      <Text
+                        style={styles.legendMovementDetail}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {item.descripcion}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <View
+                  style={[
+                    styles.legendAmountColumn,
+                    { alignItems: "flex-end" },
+                  ]}
+                >
+                  <Text style={styles.legendAmount}>
+                    {formatearMonto(item.monto)}
+                  </Text>
+                  <Text style={styles.legendMovementDetail}>{item.fecha}</Text>
+                </View>
+                <Text style={[styles.negative, styles.legendPercentageColumn]}>
+                  {porcentajeSobreGastos.toFixed()}%
+                </Text>
+                <Text style={[styles.positive, styles.legendPercentageColumn]}>
+                  {porcentajeSobreIngresos.toFixed()}%
+                </Text>
+              </View>
+            );
+          })
         ) : (
           monthExpenseCategories.map((item) => (
             <View key={item.category} style={styles.legendItem}>
@@ -361,7 +443,7 @@ const styles = StyleSheet.create({
   emptyText: { color: "#94a3b8", paddingVertical: 6 },
   legendItem: {
     flexDirection: "row",
-    padding: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: "rgb(32, 32, 38)",
   },
@@ -369,13 +451,15 @@ const styles = StyleSheet.create({
     flex: 3,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 15,
   },
   legendText: {
     color: "#e2e2e2",
     flexShrink: 1,
     fontSize: 16,
   },
+  legendMovementInfo: { flex: 1, gap: 2 },
+  legendMovementDetail: { color: "#94a3b8", fontSize: 12 },
   legendAmount: { color: "#f8fafc", fontWeight: "500", fontSize: 15 },
   legendAmountColumn: { flex: 2, textAlign: "center" },
   legendPercentageColumn: {

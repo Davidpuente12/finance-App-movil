@@ -687,7 +687,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginHorizontal: 4,
   },
-  // iconos de categorias
+
+  // Iconos de categorias
   categoryInputRow: {
     flexDirection: "row",
     alignItems: "center",

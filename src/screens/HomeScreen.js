@@ -22,7 +22,6 @@ import { mesesMap, yearsArray } from "../utils/fechaActual";
 // import { getMonthYearFiltered } from "../utils/fechaActual";
 
 const accountColors = [
-  "rgb(79, 57, 246)",
   "rgb(254, 83, 83)",
   "rgb(0, 200, 136)",
   "#2498f2",
@@ -162,7 +161,6 @@ function HomeScreen({
               <Text style={styles.accountCardName} numberOfLines={1}>
                 {cuenta.nombre}
               </Text>
-              <Text style={styles.accountCardLabel}>Saldo actual</Text>
               <Text style={styles.accountCardBalance}>
                 {formatearMonto(cuenta.saldo)}
               </Text>
@@ -558,17 +556,15 @@ const styles = StyleSheet.create({
   },
   accountCard: {
     width: "48.5%",
-    minHeight: 90,
     padding: 8,
     borderRadius: 8,
     elevation: 4,
     shadowColor: "#000000",
   },
   accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
-  accountCardLabel: { color: "#fcfdfe", fontSize: 12, marginTop: 5 },
   accountCardBalance: {
-    color: "#f8fafc",
-    fontSize: 14,
+    color: "white",
+    fontSize: 15,
     fontWeight: "500",
   },
   modalBackdrop: {
