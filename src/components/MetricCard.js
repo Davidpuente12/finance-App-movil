@@ -1,6 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../theme/ThemeContext";
 
 function MetricCard({ label, value, tone }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.metricCard}>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -9,16 +13,18 @@ function MetricCard({ label, value, tone }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   metricCard: {
     flex: 1,
     alignItems: "center",
   },
-  metricLabel: { color: "#94a3b8", fontSize: 13 },
+  metricLabel: { color: colors.textMuted, fontSize: 13 },
   metricValue: { fontSize: 16, fontWeight: "700" },
-  primary: { color: "#38bdf8" },
-  green: { color: "#34d399" },
-  red: { color: "#fb7185" },
-});
+  primary: { color: colors.accent },
+  green: { color: colors.positive },
+  red: { color: colors.negative },
+  });
+}
 
 export { MetricCard };

@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatearMonto } from "../utils/formatearMonto";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useTheme } from "../theme/ThemeContext";
 
 function TransactionModal({
   visible,
@@ -43,6 +44,8 @@ function TransactionModal({
   formCuentaDestinoId,
   setFormCuentaDestinoId,
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const montoFormat = formMonto ? formatearMonto(Number(formMonto)) : "";
   function handleMontoChange(text) {
     const raw = text.replace(/\D/g, "");
@@ -183,7 +186,7 @@ function TransactionModal({
                       <Ionicons
                         name="trash-outline"
                         size={21}
-                        color="rgb(254, 83, 83)"
+                        color={colors.expense}
                       />
                     </Pressable>
                   )}
@@ -251,13 +254,13 @@ function TransactionModal({
                     styles.input,
                     {
                       borderBottomColor: selectedMonto
-                        ? "rgba(79,57,246)"
-                        : "#334155",
+                        ? colors.primary
+                        : colors.borderStrong,
                     },
                   ]}
                   placeholder="Monto"
                   placeholderTextColor={
-                    selectedMonto ? "rgba(119,119,255)" : "rgb(200,200,200)"
+                    selectedMonto ? colors.primary : colors.inputText
                   }
                   value={montoFormat}
                   onChangeText={handleMontoChange}
@@ -272,15 +275,13 @@ function TransactionModal({
                       styles.input,
                       {
                         borderBottomColor: selectedDescription
-                          ? "rgba(79,57,246)"
-                          : "#334155",
+                          ? colors.primary
+                          : colors.borderStrong,
                       },
                     ]}
                     placeholder="Descripción"
                     placeholderTextColor={
-                      selectedDescription
-                        ? "rgba(119,119,255)"
-                        : "rgb(200,200,200)"
+                      selectedDescription ? colors.primary : colors.inputText
                     }
                     value={formDescripcion}
                     onChangeText={setFormDescripcion}
@@ -312,7 +313,7 @@ function TransactionModal({
                   <Text style={styles.accountInputValue}>
                     {selectedAccount?.nombre || "Selecciona una cuenta"}
                   </Text>
-                  <Ionicons name="chevron-down" size={22} color="white" />
+                  <Ionicons name="chevron-down" size={22} color={colors.text} />
                 </Pressable>
 
                 {formType === "transferencia" ? (
@@ -327,7 +328,11 @@ function TransactionModal({
                     <Text style={styles.accountInputValue}>
                       {transferDestination?.nombre || "Selecciona una cuenta"}
                     </Text>
-                    <Ionicons name="chevron-down" size={22} color="white" />
+                    <Ionicons
+                      name="chevron-down"
+                      size={22}
+                      color={colors.text}
+                    />
                   </Pressable>
                 ) : (
                   <View
@@ -335,8 +340,8 @@ function TransactionModal({
                       styles.categoryInputRow,
                       {
                         borderBottomColor: selectedCategory
-                          ? "rgba(79,57,246)"
-                          : "#334155",
+                          ? colors.primary
+                          : colors.borderStrong,
                       },
                     ]}
                   >
@@ -344,9 +349,7 @@ function TransactionModal({
                       style={[styles.input, styles.categoryTextInput]}
                       placeholder="Categoría"
                       placeholderTextColor={
-                        selectedCategory
-                          ? "rgba(119,119,255)"
-                          : "rgb(200,200,200)"
+                        selectedCategory ? colors.primary : colors.inputText
                       }
                       value={formCategoria}
                       onChangeText={setFormCategoria}
@@ -358,7 +361,11 @@ function TransactionModal({
                       onPress={() => setCategoryModalVisible(true)}
                       style={styles.categoryPickerButton}
                     >
-                      <Ionicons name="chevron-down" size={22} color="white" />
+                      <Ionicons
+                        name="chevron-down"
+                        size={22}
+                        color={colors.text}
+                      />
                     </Pressable>
                   </View>
                 )}
@@ -415,7 +422,11 @@ function TransactionModal({
                           onPress={() => setExpanded(null)}
                           style={styles.backCategoryButton}
                         >
-                          <Ionicons name="arrow-back" size={20} color="white" />
+                          <Ionicons
+                            name="arrow-back"
+                            size={20}
+                            color={colors.text}
+                          />
                         </Pressable>
                       )}
                       <Text style={styles.categoryModalTitle}>
@@ -505,7 +516,7 @@ function TransactionModal({
                                   <Ionicons
                                     name="chevron-forward"
                                     size={20}
-                                    color="white"
+                                    color={colors.text}
                                   />
                                 </Pressable>
                               ) : null}
@@ -564,7 +575,7 @@ function TransactionModal({
                                   : "radio-button-off"
                               }
                               size={20}
-                              color="rgb(119, 119, 255)"
+                              color={colors.primary}
                             />
                             <Text style={styles.accountName}>
                               {cuenta.nombre}
@@ -584,238 +595,244 @@ function TransactionModal({
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "rgba(79, 57, 246,0.2)" },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(25, 25, 25, 0.72)",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    flex: 1,
-    backgroundColor: "  rgba(20, 23, 28,0.9)",
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1e293b",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-    gap: 10,
-  },
+function createStyles(colors) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.primarySoft },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.modalOverlay,
+      justifyContent: "flex-end",
+    },
+    modalCard: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+      gap: 10,
+    },
 
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  modalTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "500",
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  closeButtonIcon: { color: "#e2e8f0", fontSize: 15, lineHeight: 20 },
-  actionBar: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconDelete: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconDeleteSpace: {
-    flex: 1,
-  },
-  sendButton: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  iconSend: {
-    color: "rgb(119, 119, 255)",
-    fontWeight: "500",
-    fontSize: 17,
-    marginLeft: "auto",
-  },
-  // Action bar
-  segmented: {
-    flexDirection: "row",
-    marginBottom: 14,
-    marginTop: 14,
-    backgroundColor: " rgb(32, 32, 38)",
-    borderRadius: 10,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  segmentButtonGastos: {
-    backgroundColor: "rgb(254, 83, 83)",
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
-  },
-  segmentButtonIngresos: {
-    backgroundColor: " rgb(0, 212, 146)",
-  },
-  segmentButtonTransfer: {
-    backgroundColor: "rgb(79, 57, 246)",
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  segmentText: { color: "white", fontWeight: "400", fontSize: 17 },
-  input: {
-    fontSize: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#334155",
-    padding: 18,
-    color: "#f8fafc",
-    marginBottom: 10,
-  },
-  inputDateText: {
-    color: "rgb(200,200,200)",
-    fontSize: 16,
-  },
-  validationText: {
-    color: "#fda4af",
-    fontSize: 15,
-    marginBottom: 10,
-    marginHorizontal: 4,
-  },
+    headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+    modalTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "500",
+    },
+    closeButton: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    closeButtonIcon: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      lineHeight: 20,
+    },
+    actionBar: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    iconDelete: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    iconDeleteSpace: {
+      flex: 1,
+    },
+    sendButton: {
+      alignItems: "center",
+      justifyContent: "flex-end",
+    },
+    iconSend: {
+      color: colors.primary,
+      fontWeight: "500",
+      fontSize: 17,
+      marginLeft: "auto",
+    },
+    // Action bar
+    segmented: {
+      flexDirection: "row",
+      marginBottom: 14,
+      marginTop: 14,
+      backgroundColor: colors.background,
+      borderRadius: 10,
+    },
+    segmentButton: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: "center",
+    },
+    segmentButtonGastos: {
+      backgroundColor: colors.expense,
+      borderTopLeftRadius: 10,
+      borderBottomLeftRadius: 10,
+    },
+    segmentButtonIngresos: {
+      backgroundColor: colors.income,
+    },
+    segmentButtonTransfer: {
+      backgroundColor: colors.primary,
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+    },
+    segmentText: { color: "white", fontWeight: "400", fontSize: 17 },
+    input: {
+      fontSize: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+      padding: 18,
+      color: colors.textStrong,
+      marginBottom: 10,
+    },
+    inputDateText: {
+      color: colors.inputText,
+      fontSize: 16,
+    },
+    validationText: {
+      color: colors.negativeSoft,
+      fontSize: 15,
+      marginBottom: 10,
+      marginHorizontal: 4,
+    },
 
-  // Iconos de categorias
-  categoryInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#334155",
-    marginBottom: 10,
-  },
-  categoryTextInput: {
-    flex: 1,
-    borderBottomWidth: 0,
-    marginBottom: 0,
-  },
-  categoryPickerButton: {
-    width: 52,
-    height: 52,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  accountInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    padding: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: "#334155",
-    marginBottom: 10,
-  },
-  accountInputLabel: { color: "#94a3b8", fontSize: 14 },
-  accountInputValue: { flex: 1, color: "#f8fafc", fontSize: 16 },
+    // Iconos de categorias
+    categoryInputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+      marginBottom: 10,
+    },
+    categoryTextInput: {
+      flex: 1,
+      borderBottomWidth: 0,
+      marginBottom: 0,
+    },
+    categoryPickerButton: {
+      width: 52,
+      height: 52,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    accountInput: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      padding: 18,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+      marginBottom: 10,
+    },
+    accountInputLabel: { color: colors.textMuted, fontSize: 14 },
+    accountInputValue: { flex: 1, color: colors.textStrong, fontSize: 16 },
 
-  // Modal de categorias
-  categoryModalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(25, 25, 25, 0.72)",
-    justifyContent: "flex-end",
-    paddingBottom: 60,
-  },
-  categoryModalCard: {
-    maxHeight: "78%",
-    backgroundColor: "rgba(20, 23, 28, 0.98)",
-    padding: 16,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    borderColor: "#1e293b",
-  },
-  categoryModalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  categoryModalTitle: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "500",
-  },
-  backCategoryButton: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoriesList: {
-    gap: 12,
-  },
-  categoryItem: {
-    width: "70%",
-    height: 55,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  subcategoryItem: {
-    height: 55,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 20,
-  },
-  categorySelect: {
-    gap: 20,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  categoryIconSlot: {
-    width: 45,
-    height: 45,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryText: {
-    color: "#dddbdb",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  categoryArrowSlot: {
-    width: 20,
-  },
+    // Modal de categorias
+    categoryModalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.modalOverlay,
+      justifyContent: "flex-end",
+      paddingBottom: 60,
+    },
+    categoryModalCard: {
+      maxHeight: "78%",
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      borderWidth: 1,
+      borderBottomWidth: 0,
+      borderColor: colors.border,
+    },
+    categoryModalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 20,
+    },
+    categoryModalTitle: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: "500",
+    },
+    backCategoryButton: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    categoriesList: {
+      gap: 12,
+    },
+    categoryItem: {
+      width: "70%",
+      height: 55,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    subcategoryItem: {
+      height: 55,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 20,
+    },
+    categorySelect: {
+      gap: 20,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    categoryIconSlot: {
+      width: 45,
+      height: 45,
+      borderRadius: 25,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    categoryText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    categoryArrowSlot: {
+      width: 20,
+    },
 
-  // Modal de cuentas
-  accountModalCard: {
-    maxHeight: "78%",
-    backgroundColor: "rgba(20, 23, 28, 0.98)",
-    padding: 16,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderWidth: 1,
-    borderBottomWidth: 0,
-    borderColor: "#1e293b",
-  },
-  accountItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#334155",
-  },
-  accountSelect: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  accountName: { color: "white", fontSize: 16 },
-});
+    // Modal de cuentas
+    accountModalCard: {
+      maxHeight: "78%",
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      borderWidth: 1,
+      borderBottomWidth: 0,
+      borderColor: colors.border,
+    },
+    accountItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+    },
+    accountSelect: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    accountName: { color: colors.text, fontSize: 16 },
+  });
+}
 
 export { TransactionModal };

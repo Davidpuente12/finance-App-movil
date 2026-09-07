@@ -1,8 +1,12 @@
 import { View, Text, StyleSheet } from "react-native";
 import { formatearMonto } from "../utils/formatearMonto";
 import { MetricCard } from "./MetricCard";
+import { useTheme } from "../theme/ThemeContext";
 
 function Balance({ balanceTotal, totalIngresosMensual, totalGastosMensual }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.section}>
       <View style={styles.cardsRow}>
@@ -26,11 +30,12 @@ function Balance({ balanceTotal, totalIngresosMensual, totalGastosMensual }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   section: {
-    backgroundColor: "rgb(20, 23, 28)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#1e293b",
+    borderColor: colors.border,
     marginHorizontal: 8,
     borderRadius: 12,
   },
@@ -39,8 +44,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderTopWidth: 1,
-    borderColor: "#1e293b",
+    borderColor: colors.border,
   },
-});
+  });
+}
 
 export { Balance };

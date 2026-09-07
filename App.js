@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+} from "@react-navigation/native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { formatearMonto } from "./src/utils/formatearMonto.js";
@@ -18,6 +22,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useSQLiteTransactions } from "./src/hook/useSQLiteTransactions.js";
 import { SQLiteProvider } from "expo-sqlite";
+import { ThemeProvider, useTheme } from "./src/theme/ThemeContext";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -80,13 +85,29 @@ async function initializeDatabase(db) {
 
 export default function App() {
   return (
-    <SQLiteProvider databaseName="finanzas.db" onInit={initializeDatabase}>
-      <AppContent />
-    </SQLiteProvider>
+    <ThemeProvider>
+      <SQLiteProvider databaseName="finanzas.db" onInit={initializeDatabase}>
+        <AppContent />
+      </SQLiteProvider>
+    </ThemeProvider>
   );
 }
 
 function AppContent() {
+  const { colors, isDark } = useTheme();
+  const baseNavigationTheme = isDark ? DarkTheme : DefaultTheme;
+  const navigationTheme = {
+    ...baseNavigationTheme,
+    colors: {
+      ...baseNavigationTheme.colors,
+      primary: colors.primary,
+      background: colors.background,
+      card: colors.surface,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.negative,
+    },
+  };
   const {
     lista,
     cuentas,
@@ -107,6 +128,7 @@ function AppContent() {
   const [filterYear, setFilterYear] = useState(
     new Date().getFullYear().toString(),
   );
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
 
   // valores del formulario
   const [formType, setFormType] = useState("gasto");
@@ -117,8 +139,21 @@ function AppContent() {
   const [formCuentaId, setFormCuentaId] = useState(null);
   const [formCuentaDestinoId, setFormCuentaDestinoId] = useState(null);
 
+  const accountFilteredItems = useMemo(
+    () =>
+      selectedAccountId === null
+        ? lista
+        : lista.filter((item) => item.cuenta_id === selectedAccountId),
+    [lista, selectedAccountId],
+  );
+
+  const selectedAccount = useMemo(
+    () => cuentas.find((cuenta) => cuenta.id === selectedAccountId),
+    [cuentas, selectedAccountId],
+  );
+
   const selectedMonthItems = useMemo(() => {
-    return lista.filter((item) => {
+    return accountFilteredItems.filter((item) => {
       const itemFecha = /^\d{4}-\d{2}-\d{2}$/.test(item.fecha)
         ? item.fecha
         : normalizeFecha(item.fecha);
@@ -131,7 +166,7 @@ function AppContent() {
       const matchMonth = mesNumero ? Number(itemMonth) === mesNumero : true;
       return matchYear && matchMonth;
     });
-  }, [lista, filterYear, filterMonth]);
+  }, [accountFilteredItems, filterYear, filterMonth]);
 
   // Balance, ingresos y gastos
   const totalGastosMensual = useMemo(
@@ -158,7 +193,7 @@ function AppContent() {
   const balanceTotal = totalIngresosMensual - totalGastosMensual;
 
   const allFilteredTransactions = useMemo(() => {
-    return [...lista]
+    return [...accountFilteredItems]
       .filter((item) => {
         const normalizedQuery = searchQuery.trim().toLowerCase();
         const categoria = (item.categoria || "").toLowerCase();
@@ -199,7 +234,7 @@ function AppContent() {
         if (fechaA !== fechaB) return fechaB.localeCompare(fechaA);
         return Number(b.id ?? 0) - Number(a.id ?? 0);
       });
-  }, [lista, searchQuery, filterMonth, filterYear]);
+  }, [accountFilteredItems, searchQuery, filterMonth, filterYear]);
 
   const openNewModal = () => {
     setEditingTransaction(null);
@@ -249,10 +284,15 @@ function AppContent() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
-        <NavigationContainer>
-          <View style={styles.safeArea}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: colors.background }]}
+        edges={["left", "right", "bottom"]}
+      >
+        <NavigationContainer theme={navigationTheme}>
+          <View
+            style={[styles.safeArea, { backgroundColor: colors.background }]}
+          >
             <Tab.Navigator
               screenOptions={({ route }) => ({
                 tabBarScrollEnabled: true,
@@ -262,9 +302,12 @@ function AppContent() {
                 },
                 headerShown: false,
                 tabBarActiveTintColor: "white",
-                // tabBarInactiveTintColor: "#94a3b8",
+                tabBarInactiveTintColor: colors.primaryText,
                 tabBarLabelStyle: styles.tabBarLabel,
-                tabBarStyle: styles.tabBarTop,
+                tabBarStyle: [
+                  styles.tabBarTop,
+                  { backgroundColor: colors.primary },
+                ],
                 tabBarIndicatorStyle: styles.tabBarIndicator,
                 tabBarShowIcon: true,
                 tabBarIcon: ({ color, size }) => {
@@ -299,6 +342,8 @@ function AppContent() {
                     createAccount={createAccount}
                     renameAccount={renameAccount}
                     deleteAccount={deleteAccount}
+                    selectedAccountId={selectedAccountId}
+                    setSelectedAccountId={setSelectedAccountId}
                   />
                 )}
               </Tab.Screen>
@@ -319,6 +364,7 @@ function AppContent() {
                     filterYear={filterYear}
                     setFilterYear={setFilterYear}
                     cuentas={cuentas}
+                    selectedAccount={selectedAccount}
                   />
                 )}
               </Tab.Screen>
@@ -334,6 +380,7 @@ function AppContent() {
                     formatearMonto={formatearMonto}
                     filterMonth={filterMonth}
                     filterYear={filterYear}
+                    selectedAccount={selectedAccount}
                   />
                 )}
               </Tab.Screen>
@@ -363,7 +410,10 @@ function AppContent() {
               setFormCuentaDestinoId={setFormCuentaDestinoId}
             />
 
-            <Pressable style={styles.fab} onPress={openNewModal}>
+            <Pressable
+              style={[styles.fab, { backgroundColor: colors.primary }]}
+              onPress={openNewModal}
+            >
               <Ionicons name="add" size={30} color="white" />
             </Pressable>
           </View>
@@ -374,9 +424,8 @@ function AppContent() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "rgba(79, 57, 246,0.2)" },
+  safeArea: { flex: 1 },
   tabBarTop: {
-    backgroundColor: "rgb(79, 57, 246)",
     borderBottomWidth: 1,
     paddingTop: 50,
     elevation: 8,
@@ -401,7 +450,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "rgb(79, 57, 246)",
     alignItems: "center",
     justifyContent: "center",
     elevation: 5,

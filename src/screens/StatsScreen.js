@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { formatearMonto } from "../utils/formatearMonto";
 import { MetricCard } from "../components/MetricCard";
 import { ResumenMensual } from "../components/ResumenMensual";
+import { useTheme } from "../theme/ThemeContext";
 
 const monthLabels = [
   "Ene",
@@ -41,7 +42,10 @@ function StatsScreen({
   balanceTotal,
   filterMonth,
   filterYear,
+  selectedAccount,
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const annualSummaryByMonth = useMemo(() => {
     const targetYear = Number(filterYear) || new Date().getFullYear();
     const totals = Array.from({ length: 12 }, () => ({
@@ -124,6 +128,7 @@ function StatsScreen({
         totalGastosMensual={totalGastosMensual}
         filterMonth={filterMonth}
         filterYear={filterYear}
+        selectedAccount={selectedAccount}
       />
 
       <View style={styles.section}>
@@ -131,21 +136,24 @@ function StatsScreen({
 
         <View style={styles.yearSummaryRow}>
           <MetricLine
-            label="Gasto total del año"
-            value={formatearMonto(annualExpenseTotal)}
-            tone="negative"
-          />
-
-          <MetricLine
             label="Ingresos totales del año"
             value={formatearMonto(annualIncomeAmount)}
             tone="positive"
+            colors={colors}
+          />
+
+          <MetricLine
+            label="Gasto total del año"
+            value={formatearMonto(annualExpenseTotal)}
+            tone="negative"
+            colors={colors}
           />
 
           <MetricLine
             label="Promedio mensual de gastos"
             value={formatearMonto(averageMonthlyExpenses)}
             tone="neutral"
+            colors={colors}
           />
 
           <MetricLine
@@ -153,12 +161,17 @@ function StatsScreen({
             value={`${maxIndex >= 0 ? monthNames[maxIndex] : "Sin datos"}  ${formatearMonto(
               maxAnnualExpense,
             )}`}
-            tone="neutral"
+            tone="negative"
+            colors={colors}
           />
         </View>
 
         <View style={styles.chartCard}>
-          <View style={styles.barChart}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.barChart}
+          >
             {annualExpenseByMonth.map((value, index) => {
               const height = (value / maxAnnualExpense) * 180;
               const isMax = index === maxIndex;
@@ -178,10 +191,15 @@ function StatsScreen({
                 </View>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
 
         <View style={styles.yearGrid}>
+          <View style={{ paddingBottom: 20 }}>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: 500 }}>
+              Balance en los meses del año
+            </Text>
+          </View>
           {annualSummaryByMonth.map((month, index) => (
             <View key={monthNames[index]} style={styles.yearItem}>
               <Text style={styles.yearMonthTitle}>{monthNames[index]}</Text>
@@ -225,7 +243,9 @@ function StatsScreen({
   );
 }
 
-function MetricLine({ label, value, tone }) {
+function MetricLine({ label, value, tone, colors }) {
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.metricLine}>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -245,125 +265,138 @@ function MetricLine({ label, value, tone }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { gap: 8, backgroundColor: "rgb(32, 32, 38)", paddingBottom: 20 },
-  summaryRow: { flexDirection: "row", gap: 12 },
-  cardsRow: {
-    backgroundColor: "rgb(20, 23, 28)",
-    flexDirection: "row",
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginHorizontal: 10,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#1e293b",
-  },
-  section: {
-    marginHorizontal: 10,
-    gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "rgb(20, 23, 28)",
-    borderWidth: 1,
-    borderColor: "#1e293b",
-  },
-  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
-  metricLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
-  },
-  metricLabel: { color: "#e2e8f0", fontSize: 14 },
-  metricValue: { fontWeight: "700" },
-  positive: { color: "#34d399" },
-  negative: { color: "#fb7185" },
-  neutral: { color: "white" },
-  yearSummaryRow: {
-    gap: 12,
-    marginBottom: 4,
-  },
-  chartCard: {
-    paddingVertical: 20,
-  },
-  barChart: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 6,
-    minHeight: 250,
-  },
-  barColumn: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 8,
-  },
-  barTrack: {
-    width: "100%",
-    height: 180,
-    justifyContent: "flex-end",
-    overflow: "hidden",
-  },
-  barFill: {
-    width: "100%",
-    borderRadius: 10,
-    backgroundColor: "#38bdf8",
-  },
-  barFillMax: {
-    backgroundColor: "#fb7185",
-  },
-  barLabel: {
-    color: "#94a3b8",
-    fontSize: 10,
-  },
-  yearGrid: {
-    marginTop: 15,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  yearItem: {
-    width: "48%",
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(30, 41, 59, 0.7)",
-    // borderWidth: 1,
-    // borderColor: "#1e293b",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  yearMonthTitle: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "500",
-    marginBottom: 10,
-  },
-  monthlyExpensesTitle: { color: "#fb7185", fontWeight: "600", fontSize: 13 },
-  monthlyIncomeTitle: { color: "#34d399", fontWeight: "600", fontSize: 13 },
-  yearBalanceAmount: { fontWeight: "600", fontSize: 13 },
-  yearMetric: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(51, 65, 85, 0.5)",
-  },
-  yearMetricLabel: { color: "#94a3b8", fontSize: 12 },
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: {
+      gap: 8,
+      backgroundColor: colors.background,
+      paddingBottom: 20,
+    },
+    summaryRow: { flexDirection: "row", gap: 12 },
+    cardsRow: {
+      backgroundColor: colors.surface,
+      flexDirection: "row",
+      paddingVertical: 14,
+      borderRadius: 12,
+      marginHorizontal: 10,
+      marginTop: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    section: {
+      marginHorizontal: 10,
+      gap: 12,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
+    metricLine: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    metricLabel: { color: colors.textSecondary, fontSize: 14 },
+    metricValue: { fontWeight: "700" },
+    positive: { color: colors.positive },
+    negative: { color: colors.negative },
+    neutral: { color: colors.text },
+    yearSummaryRow: {
+      gap: 12,
+      marginBottom: 4,
+    },
+    chartCard: {
+      paddingVertical: 20,
+    },
+    barChart: {
+      flexDirection: "row",
+      gap: 5,
+      minHeight: 250,
+    },
+    barColumn: {
+      width: 40,
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 8,
+    },
+    barTrack: {
+      width: "100%",
+      height: 180,
+      justifyContent: "flex-end",
+      overflow: "hidden",
+    },
+    barFill: {
+      width: "100%",
+      borderRadius: 10,
+      backgroundColor: colors.accent,
+    },
+    barFillMax: {
+      backgroundColor: colors.negative,
+    },
+    barLabel: {
+      color: colors.textMuted,
+      fontSize: 11,
+    },
+    yearGrid: {
+      marginTop: 15,
+      paddingTop: 30,
+      borderTopWidth: 1,
+      borderColor: colors.borderStrong,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    yearItem: {
+      width: "48%",
+      padding: 10,
+      borderRadius: 12,
+      backgroundColor: colors.surfaceElevated,
+      shadowColor: "#000000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    yearMonthTitle: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "500",
+      marginBottom: 10,
+    },
+    monthlyExpensesTitle: {
+      color: colors.negative,
+      fontWeight: "600",
+      fontSize: 13,
+    },
+    monthlyIncomeTitle: {
+      color: colors.positive,
+      fontWeight: "600",
+      fontSize: 13,
+    },
+    yearBalanceAmount: { fontWeight: "600", fontSize: 13 },
+    yearMetric: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    yearMetricLabel: { color: colors.textMuted, fontSize: 12 },
 
-  yearMovements: {
-    color: "#64748b",
-    fontSize: 11,
-    marginTop: 10,
-    fontStyle: "italic",
-  },
-});
+    yearMovements: {
+      color: colors.textFaint,
+      fontSize: 11,
+      marginTop: 10,
+      fontStyle: "italic",
+    },
+  });
+}
 
 export { StatsScreen };

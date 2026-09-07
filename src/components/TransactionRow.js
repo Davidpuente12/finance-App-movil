@@ -5,12 +5,13 @@ import {
   categorias_ingresos,
 } from "../data/categoriasfinas.js";
 import Entypo from "@expo/vector-icons/Entypo";
+import { useTheme } from "../theme/ThemeContext";
 
-const getCategoryIcon = (categoria, tipo) => {
+const getCategoryIcon = (categoria, tipo, styles, colors) => {
   if (!categoria) {
     return (
       <View style={[styles.categoryIcon, { backgroundColor: "transparent" }]}>
-        <Entypo name="wallet" size={20} color="white" />
+        <Entypo name="wallet" size={20} color={colors.text} />
       </View>
     );
   }
@@ -65,19 +66,21 @@ const getCategoryIcon = (categoria, tipo) => {
 
   return (
     <View style={[styles.categoryIcon, { backgroundColor: "transparent" }]}>
-      <Entypo name="wallet" size={20} color="white" />
+      <Entypo name="wallet" size={20} color={colors.text} />
     </View>
   );
 };
 
 function TransactionRow({ item, cuentas, onEdit }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const accountName = cuentas?.find(
     (cuenta) => cuenta.id === item.cuenta_id,
   )?.nombre;
 
   return (
     <Pressable style={styles.transactionRow} onPress={onEdit}>
-      {getCategoryIcon(item.categoria, item.tipo)}
+      {getCategoryIcon(item.categoria, item.tipo, styles, colors)}
       <View style={styles.transactionInfo}>
         <Text style={styles.transactionTitle}>{item.categoria}</Text>
         {accountName ? (
@@ -104,23 +107,24 @@ function TransactionRow({ item, cuentas, onEdit }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   transactionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.border,
   },
   transactionInfo: { flex: 1, gap: 4 },
-  transactionTitle: { color: "#f8fafc", fontSize: 16, fontWeight: "600" },
-  accountName: { color: "#cbd5e1", fontSize: 13, fontWeight: "600" },
-  transactionSubtitle: { color: "#94a3b8", fontSize: 13 },
+  transactionTitle: { color: colors.textStrong, fontSize: 16, fontWeight: "600" },
+  accountName: { color: colors.textSecondary, fontSize: 13, fontWeight: "600" },
+  transactionSubtitle: { color: colors.textMuted, fontSize: 13 },
   transactionActions: { alignItems: "flex-end", gap: 6 },
   transactionAmount: { fontWeight: "600", fontSize: 16 },
-  amountPositive: { color: "#34d399" },
-  amountNegative: { color: "#fb7185" },
+  amountPositive: { color: colors.positive },
+  amountNegative: { color: colors.negative },
   categoryIcon: {
     width: 42,
     height: 42,
@@ -128,6 +132,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-});
+  });
+}
 
 export { TransactionRow };

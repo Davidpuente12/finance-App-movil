@@ -19,6 +19,8 @@ import { TransactionRow } from "../components/TransactionRow";
 import { ResumenMensualHome } from "../components/ResumenMensualHome";
 import { useNavigation } from "@react-navigation/native";
 import { mesesMap, yearsArray } from "../utils/fechaActual";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useTheme } from "../theme/ThemeContext";
 // import { getMonthYearFiltered } from "../utils/fechaActual";
 
 const accountColors = [
@@ -51,7 +53,11 @@ function HomeScreen({
   createAccount,
   renameAccount,
   deleteAccount,
+  selectedAccountId,
+  setSelectedAccountId,
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [accountsModalVisible, setAccountsModalVisible] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountColor, setAccountColor] = useState(accountColors[0]);
@@ -124,6 +130,9 @@ function HomeScreen({
 
   const handleDeleteAccount = async (targetAccountId) => {
     if (await deleteAccount(accountToDelete.id, targetAccountId)) {
+      if (selectedAccountId === accountToDelete.id) {
+        setSelectedAccountId(null);
+      }
       setAccountToDelete(null);
     }
   };
@@ -149,14 +158,29 @@ function HomeScreen({
             onPress={() => setAccountsModalVisible(true)}
             style={styles.addAccountButton}
           >
-            <Text style={styles.addAccountButtonText}>Añadir cuentas</Text>
+            <FontAwesome6
+              name="bars-staggered"
+              size={20}
+              color={colors.primary}
+            />
           </Pressable>
         </View>
         <View style={styles.accountsList}>
           {accountBalances.map((cuenta) => (
-            <View
+            <Pressable
               key={cuenta.id}
-              style={[styles.accountCard, { backgroundColor: cuenta.color }]}
+              accessibilityLabel={`Filtrar por ${cuenta.nombre}`}
+              accessibilityState={{ selected: selectedAccountId === cuenta.id }}
+              onPress={() =>
+                setSelectedAccountId((currentAccountId) =>
+                  currentAccountId === cuenta.id ? null : cuenta.id,
+                )
+              }
+              style={[
+                styles.accountCard,
+                { backgroundColor: cuenta.color },
+                selectedAccountId === cuenta.id && styles.selectedAccountCard,
+              ]}
             >
               <Text style={styles.accountCardName} numberOfLines={1}>
                 {cuenta.nombre}
@@ -164,7 +188,7 @@ function HomeScreen({
               <Text style={styles.accountCardBalance}>
                 {formatearMonto(cuenta.saldo)}
               </Text>
-            </View>
+            </Pressable>
           ))}
         </View>
       </View>
@@ -176,7 +200,7 @@ function HomeScreen({
           style={styles.dateSelectorButton}
         >
           <Text style={styles.dateSelectorText}>{filterMonth}</Text>
-          <Ionicons name="chevron-down" size={20} color="rgb(102, 83, 249)" />
+          <Ionicons name="chevron-down" size={20} color={colors.primary} />
         </Pressable>
         <Pressable
           accessibilityLabel="Seleccionar año"
@@ -184,7 +208,7 @@ function HomeScreen({
           style={styles.dateSelectorButton}
         >
           <Text style={styles.dateSelectorText}>{filterYear}</Text>
-          <Ionicons name="chevron-down" size={20} color="rgb(102, 83, 249)" />
+          <Ionicons name="chevron-down" size={20} color={colors.primary} />
         </Pressable>
       </View>
 
@@ -201,6 +225,9 @@ function HomeScreen({
         selectedMonthItems={selectedMonthItems}
         totalIngresosMensual={totalIngresosMensual}
         totalGastosMensual={totalGastosMensual}
+        selectedAccount={cuentas.find(
+          (cuenta) => cuenta.id === selectedAccountId,
+        )}
       />
 
       <View style={styles.section}>
@@ -210,7 +237,7 @@ function HomeScreen({
 
         {loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator />
+            <ActivityIndicator color={colors.primary} />
             <Text style={styles.loadingText}>Cargando datos guardados...</Text>
           </View>
         ) : (
@@ -265,7 +292,7 @@ function HomeScreen({
                 placeholder={
                   editingAccount ? "Nuevo nombre" : "Nombre de la cuenta"
                 }
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textMuted}
                 value={accountName}
                 onChangeText={setAccountName}
                 maxLength={30}
@@ -389,7 +416,7 @@ function HomeScreen({
                   style={styles.yearOption}
                 >
                   <Text
-                    style={{ color: "rgb(119, 119, 255)", fontWeight: 500 }}
+                    style={{ color: colors.primary, fontWeight: 500 }}
                   >
                     {year}
                   </Text>
@@ -438,6 +465,9 @@ function HomeScreen({
 }
 
 function EmptyState({ text }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.emptyState}>
       <Text style={styles.emptyStateText}>{text}</Text>
@@ -445,11 +475,12 @@ function EmptyState({ text }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   container: {
     flexGrow: 1,
     gap: 7,
-    backgroundColor: "rgb(32, 32, 38)",
+    backgroundColor: colors.background,
     paddingBottom: 80,
   },
   section: {
@@ -457,9 +488,9 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "rgb(20, 23, 28)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#1e293b",
+    borderColor: colors.border,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -467,12 +498,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 5,
   },
-  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
+  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
   loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
-  loadingText: { color: "#cbd5e1" },
+  loadingText: { color: colors.textSecondary },
 
   emptyState: { paddingVertical: 18, alignItems: "center" },
-  emptyStateText: { color: "#94a3b8", textAlign: "center" },
+  emptyStateText: { color: colors.textMuted, textAlign: "center" },
 
   sectionFooter: {
     paddingTop: 15,
@@ -480,7 +511,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sectionFooterText: {
-    color: "rgb(119, 119, 255)",
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "500",
   },
@@ -499,23 +530,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#1e293b",
-    backgroundColor: "rgb(20, 23, 28)",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  dateSelectorText: { color: "#f8fafc", fontSize: 16, fontWeight: "500" },
+  dateSelectorText: { color: colors.textStrong, fontSize: 16, fontWeight: "500" },
   dateModalBackdrop: {
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: colors.overlay,
   },
   dateModalCard: {
     padding: 12,
     gap: 20,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#1e293b",
-    backgroundColor: "rgb(20, 23, 28)",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   monthGrid: {
     flexDirection: "row",
@@ -528,10 +559,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderRadius: 6,
-    backgroundColor: "rgba(79, 57, 246, 0.7)",
+    backgroundColor: colors.primarySelected,
   },
   monthOptionText: {
-    color: "rgb(189, 189, 252)",
+    color: colors.primaryText,
     fontSize: 15,
     fontWeight: "500",
   },
@@ -540,15 +571,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    borderBottomColor: colors.borderStrong,
   },
   // seccion de cuentas
   addAccountButton: { paddingVertical: 6, paddingHorizontal: 10 },
-  addAccountButtonText: {
-    color: "rgb(119, 119, 255)",
-    fontSize: 16,
-    fontWeight: "500",
-  },
   accountsList: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -558,9 +584,12 @@ const styles = StyleSheet.create({
     width: "48.5%",
     padding: 8,
     borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "transparent",
     elevation: 4,
     shadowColor: "#000000",
   },
+  selectedAccountCard: { borderColor: colors.text },
   accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
   accountCardBalance: {
     color: "white",
@@ -570,17 +599,17 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: colors.overlay,
     marginBottom: 48,
   },
   accountsModalCard: {
     maxHeight: "78%",
     padding: 16,
-    backgroundColor: "rgb(20, 23, 28)",
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
-  closeButton: { color: "white", fontSize: 15, lineHeight: 28 },
+  closeButton: { color: colors.text, fontSize: 15, lineHeight: 28 },
   accountForm: { flexDirection: "row", gap: 8, marginVertical: 16 },
   colorPicker: { flexDirection: "row", gap: 12, marginBottom: 16 },
   colorSwatch: {
@@ -590,19 +619,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
-  selectedColorSwatch: { borderColor: "white" },
+  selectedColorSwatch: { borderColor: colors.text },
   accountNameInput: {
     flex: 1,
     padding: 12,
-    color: "#f8fafc",
+    color: colors.textStrong,
     fontSize: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    borderBottomColor: colors.borderStrong,
   },
   accountSaveButton: {
     justifyContent: "center",
     paddingHorizontal: 14,
-    backgroundColor: "rgb(79, 57, 246)",
+    backgroundColor: colors.primary,
     borderRadius: 6,
   },
   accountSaveButtonText: { color: "white", fontWeight: "700" },
@@ -612,39 +641,40 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    borderBottomColor: colors.borderStrong,
   },
   accountManageInfo: { flex: 1 },
-  accountManageName: { color: "white", fontSize: 16, fontWeight: "500" },
-  accountManageBalance: { color: "#94a3b8", marginTop: 3 },
+  accountManageName: { color: colors.text, fontSize: 16, fontWeight: "500" },
+  accountManageBalance: { color: colors.textMuted, marginTop: 3 },
   accountAction: { paddingVertical: 6, paddingHorizontal: 4 },
-  accountActionText: { color: "#cbd5e1", fontWeight: "700" },
-  deleteActionText: { color: "#fb7185", fontWeight: "700" },
-  accountLimit: { color: "#94a3b8", textAlign: "right", marginTop: 14 },
+  accountActionText: { color: colors.textSecondary, fontWeight: "700" },
+  deleteActionText: { color: colors.negative, fontWeight: "700" },
+  accountLimit: { color: colors.textMuted, textAlign: "right", marginTop: 14 },
   transferBackdrop: {
     flex: 1,
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: colors.overlay,
   },
   transferCard: {
     gap: 12,
     padding: 20,
-    backgroundColor: "rgb(20, 23, 28)",
+    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: colors.borderStrong,
   },
-  transferDescription: { color: "#cbd5e1", lineHeight: 20 },
+  transferDescription: { color: colors.textSecondary, lineHeight: 20 },
   transferButton: {
     alignItems: "center",
     padding: 13,
-    backgroundColor: "rgb(79, 57, 246)",
+    backgroundColor: colors.primary,
     borderRadius: 6,
   },
   transferButtonText: { color: "white", fontWeight: "700" },
   cancelButton: { alignItems: "center", padding: 10 },
-  cancelButtonText: { color: "#cbd5e1", fontWeight: "700" },
-});
+  cancelButtonText: { color: colors.textSecondary, fontWeight: "700" },
+  });
+}
 
 export { HomeScreen };

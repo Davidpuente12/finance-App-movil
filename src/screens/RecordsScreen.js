@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { TransactionRow } from "../components/TransactionRow";
+import { useTheme } from "../theme/ThemeContext";
 
 function RecordsScreen({
   loading,
@@ -8,7 +9,11 @@ function RecordsScreen({
   setSearchQuery,
   openEditModal,
   cuentas,
+  selectedAccount,
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <ScrollView
       style={{ flex: 1 }}
@@ -19,7 +24,7 @@ function RecordsScreen({
         <TextInput
           style={styles.input}
           placeholder="Busca por descripción o categoría"
-          placeholderTextColor="#64748b"
+          placeholderTextColor={colors.textFaint}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -28,9 +33,22 @@ function RecordsScreen({
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Resultados</Text>
-          <Text style={styles.sectionMeta}>
-            {allFilteredTransactions.length} movimientos
-          </Text>
+          <View style={styles.sectionMetaContainer}>
+            <Text style={styles.sectionMeta}>
+              {allFilteredTransactions.length} movimientos
+            </Text>
+            {selectedAccount && (
+              <Text
+                style={[
+                  styles.accountFilterText,
+                  { color: selectedAccount.color },
+                ]}
+                numberOfLines={1}
+              >
+                {selectedAccount.nombre}
+              </Text>
+            )}
+          </View>
         </View>
 
         {allFilteredTransactions.length === 0 ? (
@@ -75,6 +93,9 @@ function RecordsScreen({
 }
 
 function EmptyState({ text }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.emptyState}>
       <Text style={styles.emptyStateText}>{text}</Text>
@@ -82,10 +103,11 @@ function EmptyState({ text }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "rgb(20, 23, 28)",
+    backgroundColor: colors.surface,
   },
   section: {
     flex: 1,
@@ -97,19 +119,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  sectionTitle: { color: "#f8fafc", fontSize: 17, fontWeight: "500" },
-  sectionMeta: { color: "#94a3b8", fontSize: 12 },
+  sectionTitle: { color: colors.textStrong, fontSize: 17, fontWeight: "500" },
+  sectionMetaContainer: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  sectionMeta: { color: colors.textMuted, fontSize: 13 },
+  accountFilterText: { fontSize: 14, fontWeight: "500" },
   sectionFilter: { padding: 10 },
   input: {
     borderWidth: 1,
     borderRadius: 20,
     padding: 15,
-    borderColor: "#334155",
-    color: "#f8fafc",
+    borderColor: colors.borderStrong,
+    color: colors.textStrong,
     fontSize: 17,
   },
   emptyState: { paddingVertical: 18, alignItems: "center" },
-  emptyStateText: { color: "#94a3b8", textAlign: "center" },
-});
+  emptyStateText: { color: colors.textMuted, textAlign: "center" },
+  });
+}
 
 export { RecordsScreen };

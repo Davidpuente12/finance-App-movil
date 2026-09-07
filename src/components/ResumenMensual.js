@@ -5,6 +5,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { formatearMonto } from "../utils/formatearMonto";
 import { categorias_gastos } from "../data/categoriasfinas";
 import { getMonthYearFiltered } from "../utils/fechaActual";
+import { useTheme } from "../theme/ThemeContext";
 
 function getCategoryInfo(category) {
   const categoryInfo = categorias_gastos.find(
@@ -57,8 +58,12 @@ function ResumenMensual({
   totalIngresosMensual,
   filterMonth,
   filterYear,
+  selectedAccount,
 }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showAllLegendItems, setShowAllLegendItems] = useState(false);
 
   const totalGastosReales = useMemo(
     () =>
@@ -188,6 +193,7 @@ function ResumenMensual({
       if (angle >= startAngle && angle < endAngle) {
         const category = item.category;
         setSelectedCategory(selectedCategory === category ? null : category);
+        setShowAllLegendItems(false);
         return;
       }
 
@@ -205,9 +211,27 @@ function ResumenMensual({
           </Text>
         </View>
 
-        <Text style={styles.description}>
-          {selectedMonthItems.length} movimientos
-        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Text style={styles.description}>
+            {selectedMonthItems.length} movimientos
+          </Text>
+          {selectedAccount && (
+            <Text
+              style={[
+                styles.accountFilterText,
+                { color: selectedAccount.color },
+              ]}
+            >
+              {selectedAccount.nombre}
+            </Text>
+          )}
+        </View>
       </View>
 
       <View style={styles.monthSummaryRow}>
@@ -222,7 +246,7 @@ function ResumenMensual({
               cy="90"
               r="62"
               fill="transparent"
-              stroke="#1e293b"
+              stroke={colors.border}
               strokeWidth="20"
             />
             <DonutSlices
@@ -259,103 +283,124 @@ function ResumenMensual({
       {/* Leyenda */}
       <View style={styles.legendList}>
         <View style={styles.legendTitle}>
-          <Text style={{ color: "#7dd3fc" }}>% Gastos / Ingresos</Text>
+          <Text style={{ color: colors.accentLight }}>% Gastos / Ingresos</Text>
         </View>
         {monthExpenseCategories.length === 0 ? (
           <Text style={styles.emptyText}>
             No hay gastos en el mes seleccionado.
           </Text>
         ) : selectedCategory ? (
-          selectedCategoryExpenses.map((item, index) => {
-            const categoryInfo = getCategoryInfo(
-              item.categoria.trim().toLowerCase(),
-            );
-            const porcentajeSobreGastos =
-              totalGastosReales > 0
-                ? (item.monto / totalGastosReales) * 100
-                : 0;
-            const porcentajeSobreIngresos =
-              totalIngresosMensual > 0
-                ? (item.monto / totalIngresosMensual) * 100
-                : 0;
+          selectedCategoryExpenses
+            .slice(0, showAllLegendItems ? undefined : 5)
+            .map((item, index) => {
+              const categoryInfo = getCategoryInfo(
+                item.categoria.trim().toLowerCase(),
+              );
+              const porcentajeSobreGastos =
+                totalGastosReales > 0
+                  ? (item.monto / totalGastosReales) * 100
+                  : 0;
+              const porcentajeSobreIngresos =
+                totalIngresosMensual > 0
+                  ? (item.monto / totalIngresosMensual) * 100
+                  : 0;
 
-            return (
-              <View
-                key={item.id ?? `${item.fecha}-${item.categoria}-${index}`}
-                style={styles.legendItem}
-              >
-                <View style={styles.legendLeft}>
-                  {categoryInfo.icon &&
-                    React.cloneElement(categoryInfo.icon, {
-                      color: categoryInfo.color,
-                    })}
+              return (
+                <View
+                  key={item.id ?? `${item.fecha}-${item.categoria}-${index}`}
+                  style={styles.legendItem}
+                >
+                  <View style={styles.legendLeft}>
+                    {categoryInfo.icon &&
+                      React.cloneElement(categoryInfo.icon, {
+                        color: categoryInfo.color,
+                      })}
 
-                  <View style={styles.legendMovementInfo}>
-                    <Text
-                      style={styles.legendText}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {item.categoria}
-                    </Text>
-                    {item.descripcion && (
+                    <View style={styles.legendMovementInfo}>
                       <Text
-                        style={styles.legendMovementDetail}
+                        style={styles.legendText}
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
-                        {item.descripcion}
+                        {item.categoria}
                       </Text>
-                    )}
+                      {item.descripcion && (
+                        <Text
+                          style={styles.legendMovementDetail}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {item.descripcion}
+                        </Text>
+                      )}
+                    </View>
                   </View>
-                </View>
-                <View
-                  style={[
-                    styles.legendAmountColumn,
-                    { alignItems: "flex-end" },
-                  ]}
-                >
-                  <Text style={styles.legendAmount}>
-                    {formatearMonto(item.monto)}
+                  <View
+                    style={[
+                      styles.legendAmountColumn,
+                      { alignItems: "flex-end" },
+                    ]}
+                  >
+                    <Text style={styles.legendAmount}>
+                      {formatearMonto(item.monto)}
+                    </Text>
+                    <Text style={styles.legendMovementDetail}>
+                      {item.fecha}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[styles.negative, styles.legendPercentageColumn]}
+                  >
+                    {porcentajeSobreGastos.toFixed()}%
                   </Text>
-                  <Text style={styles.legendMovementDetail}>{item.fecha}</Text>
+                  <Text
+                    style={[styles.positive, styles.legendPercentageColumn]}
+                  >
+                    {porcentajeSobreIngresos.toFixed()}%
+                  </Text>
                 </View>
+              );
+            })
+        ) : (
+          monthExpenseCategories
+            .slice(0, showAllLegendItems ? undefined : 5)
+            .map((item) => (
+              <View key={item.category} style={styles.legendItem}>
+                <View style={styles.legendLeft}>
+                  {item.icon &&
+                    React.cloneElement(item.icon, { color: item.color })}
+
+                  <Text
+                    style={styles.legendText}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {formatCategoryName(item.category)}
+                  </Text>
+                </View>
+                <Text style={[styles.legendAmount, styles.legendAmountColumn]}>
+                  {formatearMonto(item.total)}
+                </Text>
                 <Text style={[styles.negative, styles.legendPercentageColumn]}>
-                  {porcentajeSobreGastos.toFixed()}%
+                  {item.porcentajeSobreGastos.toFixed()}%
                 </Text>
                 <Text style={[styles.positive, styles.legendPercentageColumn]}>
-                  {porcentajeSobreIngresos.toFixed()}%
+                  {item.porcentajeSobreIngresos.toFixed()}%
                 </Text>
               </View>
-            );
-          })
-        ) : (
-          monthExpenseCategories.map((item) => (
-            <View key={item.category} style={styles.legendItem}>
-              <View style={styles.legendLeft}>
-                {item.icon &&
-                  React.cloneElement(item.icon, { color: item.color })}
-
-                <Text
-                  style={styles.legendText}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {formatCategoryName(item.category)}
-                </Text>
-              </View>
-              <Text style={[styles.legendAmount, styles.legendAmountColumn]}>
-                {formatearMonto(item.total)}
-              </Text>
-              <Text style={[styles.negative, styles.legendPercentageColumn]}>
-                {item.porcentajeSobreGastos.toFixed()}%
-              </Text>
-              <Text style={[styles.positive, styles.legendPercentageColumn]}>
-                {item.porcentajeSobreIngresos.toFixed()}%
-              </Text>
-            </View>
-          ))
+            ))
         )}
+        {(selectedCategory ? selectedCategoryExpenses : monthExpenseCategories)
+          .length > 5 &&
+          !showAllLegendItems && (
+            <TouchableOpacity
+              accessibilityLabel="Ver todos los elementos de la leyenda"
+              onPress={() => setShowAllLegendItems(true)}
+              style={styles.showAllLegendButton}
+            >
+              <Text style={styles.showAllLegendButtonText}>Ver todos</Text>
+            </TouchableOpacity>
+          )}
       </View>
     </View>
   );
@@ -396,20 +441,21 @@ function DonutSlices({ data, total, selectedCategory }) {
   });
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   section: {
     marginHorizontal: 10,
     gap: 12,
     padding: 16,
-    paddingBottom: 26,
     borderRadius: 12,
-    backgroundColor: "rgb(20, 23, 28)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#1e293b",
+    borderColor: colors.border,
   },
-  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
-  description: { color: "#cbd5e1", lineHeight: 20, marginTop: 5 },
-  sectionDate: { color: "#cbd5e1", fontSize: 16, marginTop: 5 },
+  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
+  description: { color: colors.textSecondary, lineHeight: 20, marginTop: 5 },
+  accountFilterText: { fontSize: 13, fontWeight: "500" },
+  sectionDate: { color: colors.textSecondary, fontSize: 16, marginTop: 5 },
   monthSummaryRow: {
     gap: 14,
   },
@@ -427,9 +473,9 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
   },
-  donutLabel: { color: "#94a3b8", fontSize: 14, marginBottom: 4 },
+  donutLabel: { color: colors.textMuted, fontSize: 14, marginBottom: 4 },
   donutValue: {
-    color: "white",
+    color: colors.text,
     fontSize: 17,
     fontWeight: "600",
     textAlign: "center",
@@ -440,12 +486,12 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginTop: 10,
   },
-  emptyText: { color: "#94a3b8", paddingVertical: 6 },
+  emptyText: { color: colors.textMuted, paddingVertical: 6 },
   legendItem: {
     flexDirection: "row",
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderBottomWidth: 1,
-    borderColor: "rgb(32, 32, 38)",
+    borderColor: colors.background,
   },
   legendLeft: {
     flex: 3,
@@ -454,20 +500,27 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   legendText: {
-    color: "#e2e2e2",
+    color: colors.textSecondary,
     flexShrink: 1,
     fontSize: 16,
   },
   legendMovementInfo: { flex: 1, gap: 2 },
-  legendMovementDetail: { color: "#94a3b8", fontSize: 12 },
-  legendAmount: { color: "#f8fafc", fontWeight: "500", fontSize: 15 },
+  legendMovementDetail: { color: colors.textMuted, fontSize: 12 },
+  legendAmount: { color: colors.textStrong, fontWeight: "500", fontSize: 15 },
   legendAmountColumn: { flex: 2, textAlign: "center" },
   legendPercentageColumn: {
     flex: 0.9,
     textAlign: "right",
   },
-  positive: { color: "#34d399", fontSize: 14 },
-  negative: { color: "#fb7185", fontSize: 14 },
-});
+  showAllLegendButton: { alignSelf: "flex-end", marginTop: 15 },
+  showAllLegendButtonText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  positive: { color: colors.positive, fontSize: 14 },
+  negative: { color: colors.negative, fontSize: 14 },
+  });
+}
 
 export { ResumenMensual };

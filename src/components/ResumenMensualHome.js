@@ -10,6 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { formatearMonto } from "../utils/formatearMonto";
 import { categorias_gastos } from "../data/categoriasfinas";
+import { useTheme } from "../theme/ThemeContext";
 
 function getParentCategory(category) {
   return (
@@ -22,7 +23,13 @@ function getParentCategory(category) {
   );
 }
 
-function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
+function ResumenMensualHome({
+  selectedMonthItems,
+  totalIngresosMensual,
+  selectedAccount,
+}) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const totalGastosReales = useMemo(
@@ -151,6 +158,13 @@ function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Resumen mensual</Text>
+        {selectedAccount && (
+          <Text
+            style={[styles.accountFilterText, { color: selectedAccount.color }]}
+          >
+            {selectedAccount.nombre}
+          </Text>
+        )}
       </View>
 
       <View style={styles.donutWrap}>
@@ -165,7 +179,7 @@ function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
               cy="90"
               r="62"
               fill="transparent"
-              stroke="#1e293b"
+              stroke={colors.border}
               strokeWidth="20"
             />
             <DonutSlices
@@ -223,7 +237,7 @@ function ResumenMensualHome({ selectedMonthItems, totalIngresosMensual }) {
         onPress={() => navigation.navigate("Estadisticas")}
         style={styles.sectionFooter}
       >
-        <Text style={styles.sectionFooterText}>Mostras mas</Text>
+        <Text style={styles.sectionFooterText}>Detalles</Text>
       </Pressable>
     </View>
   );
@@ -264,75 +278,82 @@ function DonutSlices({ data, total, selectedCategory }) {
   });
 }
 
-const styles = StyleSheet.create({
-  section: {
-    marginHorizontal: 8,
-    gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "rgb(20, 23, 28)",
-    borderWidth: 1,
-    borderColor: "#1e293b",
-  },
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between" },
-  sectionTitle: { color: "white", fontSize: 17, fontWeight: "500" },
+function createStyles(colors) {
+  return StyleSheet.create({
+    section: {
+      marginHorizontal: 8,
+      gap: 12,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
+    accountFilterText: { fontSize: 14, fontWeight: "500" },
 
-  // Donut
-  donutWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 6,
-  },
-  donutCenter: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 150,
-    height: 150,
-  },
-  donutLabel: { color: "#94a3b8", fontSize: 14, marginBottom: 4 },
-  donutValue: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "600",
-    textAlign: "center",
-  },
+    // Donut
+    donutWrap: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 6,
+    },
+    donutCenter: {
+      position: "absolute",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 150,
+      height: 150,
+    },
+    donutLabel: { color: colors.textMuted, fontSize: 14, marginBottom: 4 },
+    donutValue: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: "600",
+      textAlign: "center",
+    },
 
-  // legendList
+    // legendList
 
-  legendList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    columnGap: 10,
-  },
-  emptyText: { color: "#94a3b8", paddingVertical: 6 },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  legendLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  legendText: { color: "#cbd5e1", flexShrink: 1, fontSize: 13 },
-  legendPoint: { width: 7, height: 7, borderRadius: 10 },
+    legendList: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      columnGap: 10,
+    },
+    emptyText: { color: colors.textMuted, paddingVertical: 6 },
+    legendItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    legendLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    legendText: { color: colors.textSecondary, flexShrink: 1, fontSize: 13 },
+    legendPoint: { width: 7, height: 7, borderRadius: 10 },
 
-  // Footer
-  sectionFooter: {
-    borderTopWidth: 1,
-    borderColor: "#1e293b",
-    paddingTop: 15,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  sectionFooterText: {
-    color: "rgb(119, 119, 255)",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-});
+    // Footer
+    sectionFooter: {
+      borderTopWidth: 1,
+      borderColor: colors.border,
+      paddingTop: 15,
+      flexDirection: "row",
+      justifyContent: "flex-end",
+    },
+    sectionFooterText: {
+      color: colors.primarytextLink,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+  });
+}
 
 export { ResumenMensualHome };
