@@ -26,7 +26,7 @@ async function initializeDatabase(db) {
     CREATE TABLE IF NOT EXISTS cuentas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL COLLATE NOCASE UNIQUE,
-      color TEXT NOT NULL DEFAULT 'rgb(0, 200, 136)'
+      color TEXT NOT NULL DEFAULT 'rgb(0, 180, 123)'
     );
 
     CREATE TABLE IF NOT EXISTS transacciones (
@@ -59,12 +59,12 @@ async function initializeDatabase(db) {
 
   if (!hasAccountColor) {
     await db.execAsync(
-      "ALTER TABLE cuentas ADD COLUMN color TEXT NOT NULL DEFAULT 'rgb(0, 200, 136)';",
+      "ALTER TABLE cuentas ADD COLUMN color TEXT NOT NULL DEFAULT 'rgb(0, 180, 123)';",
     );
   }
 
   await db.runAsync("UPDATE cuentas SET color=? WHERE nombre=?;", [
-    "rgb(0, 200, 136)",
+    "rgb(0, 180, 123)",
     "Efectivo",
   ]);
 

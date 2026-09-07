@@ -161,7 +161,7 @@ function TransactionModal({
             <View style={styles.modalHeader}>
               <View style={styles.headerLeft}>
                 <Pressable onPress={handleOpen} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>⨉</Text>
+                  <Text style={styles.closeButtonIcon}>⨉</Text>
                 </Pressable>
                 <Text style={styles.modalTitle}>
                   {editingTransaction
@@ -408,7 +408,16 @@ function TransactionModal({
               >
                 <View style={styles.categoryModalBackdrop}>
                   <View style={styles.categoryModalCard}>
+                    {/* Header */}
                     <View style={styles.categoryModalHeader}>
+                      {expanded && (
+                        <Pressable
+                          onPress={() => setExpanded(null)}
+                          style={styles.backCategoryButton}
+                        >
+                          <Ionicons name="arrow-back" size={20} color="white" />
+                        </Pressable>
+                      )}
                       <Text style={styles.categoryModalTitle}>
                         {expanded
                           ? `Selecciona en ${expanded.name}`
@@ -421,27 +430,13 @@ function TransactionModal({
                         }}
                         style={styles.closeButton}
                       >
-                        <Ionicons name="close" size={22} color="white" />
+                        <Text style={styles.closeButtonIcon}>⨉</Text>
                       </Pressable>
                     </View>
-                    {expanded && (
-                      <Pressable
-                        onPress={() => setExpanded(null)}
-                        style={styles.backCategoryButton}
-                      >
-                        <Ionicons name="arrow-back" size={18} color="white" />
-                        <Text style={styles.backCategoryText}>
-                          Todas las categorías
-                        </Text>
-                      </Pressable>
-                    )}
+
                     <ScrollView
                       showsVerticalScrollIndicator={false}
-                      contentContainerStyle={
-                        expanded
-                          ? styles.subcategoriesList
-                          : styles.categoriesList
-                      }
+                      contentContainerStyle={styles.categoriesList}
                     >
                       {(expanded
                         ? expanded.subcategorias
@@ -453,18 +448,22 @@ function TransactionModal({
                           return (
                             <Pressable
                               key={index}
-                              style={[
-                                styles.subcategoryItem,
-                                { backgroundColor: expanded.color },
-                              ]}
+                              style={styles.subcategoryItem}
                               onPress={() => {
                                 setFormCategoria(item.name);
                                 setCategoryModalVisible(false);
                                 setExpanded(null);
                               }}
                             >
-                              {item.icon || expanded.icon}
-                              <Text style={styles.subcategoryText}>
+                              <View
+                                style={[
+                                  styles.categoryIconSlot,
+                                  { backgroundColor: expanded.color },
+                                ]}
+                              >
+                                {item.icon || expanded.icon}
+                              </View>
+                              <Text style={styles.categoryText}>
                                 {item.name}
                               </Text>
                             </Pressable>
@@ -472,45 +471,44 @@ function TransactionModal({
                         }
 
                         return (
-                          <View key={index} style={styles.categoryCard}>
-                            <View
-                              style={[
-                                styles.categoryItem,
-                                { backgroundColor: item.color },
-                              ]}
+                          <View key={index} style={styles.categoryItem}>
+                            <Pressable
+                              style={styles.categorySelect}
+                              onPress={() => {
+                                setFormCategoria(item.name);
+                                setCategoryModalVisible(false);
+                              }}
                             >
-                              <Pressable
-                                style={styles.categorySelect}
-                                onPress={() => {
-                                  setFormCategoria(item.name);
-                                  setCategoryModalVisible(false);
-                                }}
+                              <View
+                                style={[
+                                  styles.categoryIconSlot,
+                                  { backgroundColor: item.color },
+                                ]}
                               >
-                                <View style={styles.categoryIconSlot}>
-                                  {item.icon}
-                                </View>
-                                <Text
-                                  style={styles.categoryText}
-                                  numberOfLines={2}
-                                >
-                                  {item.name}
-                                </Text>
-                              </Pressable>
-                              <View style={styles.categoryArrowSlot}>
-                                {item.subcategorias?.length ? (
-                                  <Pressable
-                                    accessibilityLabel={`Ver subcategorías de ${item.name}`}
-                                    onPress={() => setExpanded(item)}
-                                    hitSlop={8}
-                                  >
-                                    <Ionicons
-                                      name="chevron-forward"
-                                      size={20}
-                                      color="white"
-                                    />
-                                  </Pressable>
-                                ) : null}
+                                {item.icon}
                               </View>
+                              <Text
+                                style={styles.categoryText}
+                                numberOfLines={2}
+                              >
+                                {item.name}
+                              </Text>
+                            </Pressable>
+
+                            <View style={styles.categoryArrowSlot}>
+                              {item.subcategorias?.length ? (
+                                <Pressable
+                                  accessibilityLabel={`Ver subcategorías de ${item.name}`}
+                                  onPress={() => setExpanded(item)}
+                                  hitSlop={8}
+                                >
+                                  <Ionicons
+                                    name="chevron-forward"
+                                    size={20}
+                                    color="white"
+                                  />
+                                </Pressable>
+                              ) : null}
                             </View>
                           </View>
                         );
@@ -538,7 +536,7 @@ function TransactionModal({
                         onPress={() => setAccountModalVisible(false)}
                         style={styles.closeButton}
                       >
-                        <Ionicons name="close" size={22} color="white" />
+                        <Text style={styles.closeButtonIcon}>⨉</Text>
                       </Pressable>
                     </View>
 
@@ -620,13 +618,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  closeButtonText: { color: "#e2e8f0", fontSize: 15, lineHeight: 20 },
+  closeButtonIcon: { color: "#e2e8f0", fontSize: 15, lineHeight: 20 },
   actionBar: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    // backgroundColor: "red",
   },
   iconDelete: {
     alignItems: "center",
@@ -636,7 +633,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sendButton: {
-    // flex: 1,
     alignItems: "center",
     justifyContent: "flex-end",
   },
@@ -721,6 +717,7 @@ const styles = StyleSheet.create({
   },
   accountInputLabel: { color: "#94a3b8", fontSize: 14 },
   accountInputValue: { flex: 1, color: "#f8fafc", fontSize: 16 },
+
   // Modal de categorias
   categoryModalBackdrop: {
     flex: 1,
@@ -738,6 +735,61 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderColor: "#1e293b",
   },
+  categoryModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  categoryModalTitle: {
+    color: "white",
+    fontSize: 17,
+    fontWeight: "500",
+  },
+  backCategoryButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  categoriesList: {
+    gap: 12,
+  },
+  categoryItem: {
+    width: "70%",
+    height: 55,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  subcategoryItem: {
+    height: 55,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+  },
+  categorySelect: {
+    gap: 20,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  categoryIconSlot: {
+    width: 45,
+    height: 45,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  categoryText: {
+    color: "#dddbdb",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  categoryArrowSlot: {
+    width: 20,
+  },
+
+  // Modal de cuentas
   accountModalCard: {
     maxHeight: "78%",
     backgroundColor: "rgba(20, 23, 28, 0.98)",
@@ -763,80 +815,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   accountName: { color: "white", fontSize: 16 },
-  categoryModalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 18,
-  },
-  categoryModalTitle: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  backCategoryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
-  },
-  backCategoryText: {
-    color: "#cbd5e1",
-    fontSize: 14,
-  },
-  categoryCard: {
-    flexDirection: "column",
-    gap: 10,
-  },
-  categoriesList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-evenly",
-    gap: 12,
-  },
-  subcategoriesList: {
-    gap: 10,
-  },
-  categoryItem: {
-    width: "180",
-    height: 55,
-    flexDirection: "row",
-    borderRadius: 10,
-    alignItems: "center",
-    paddingHorizontal: 10,
-    gap: 8,
-  },
-  categorySelect: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  categoryIconSlot: {
-    width: 24,
-    alignItems: "center",
-  },
-  categoryArrowSlot: {
-    width: 20,
-    alignItems: "center",
-  },
-  categoryText: {
-    flex: 1,
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  subcategoryItem: {
-    minHeight: 52,
-    padding: 12,
-    borderRadius: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  subcategoryText: {
-    color: "white",
-  },
 });
 
 export { TransactionModal };
