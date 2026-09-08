@@ -349,7 +349,7 @@ function createStyles(colors) {
       justifyContent: "flex-end",
     },
     sectionFooterText: {
-      color: colors.primarytextLink,
+      color: colors.primaryText,
       fontSize: 15,
       fontWeight: "600",
     },

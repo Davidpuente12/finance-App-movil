@@ -270,7 +270,7 @@ function createStyles(colors) {
     container: {
       gap: 8,
       backgroundColor: colors.background,
-      paddingBottom: 20,
+      paddingBottom: 50,
     },
     summaryRow: { flexDirection: "row", gap: 12 },
     cardsRow: {
@@ -287,6 +287,7 @@ function createStyles(colors) {
       marginHorizontal: 10,
       gap: 12,
       padding: 16,
+      paddingBottom: 30,
       borderRadius: 12,
       backgroundColor: colors.surface,
       borderWidth: 1,

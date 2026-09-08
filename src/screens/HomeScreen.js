@@ -161,7 +161,7 @@ function HomeScreen({
             <FontAwesome6
               name="bars-staggered"
               size={20}
-              color={colors.primary}
+              color={colors.primaryText}
             />
           </Pressable>
         </View>
@@ -200,7 +200,7 @@ function HomeScreen({
           style={styles.dateSelectorButton}
         >
           <Text style={styles.dateSelectorText}>{filterMonth}</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.primary} />
+          <Ionicons name="chevron-down" size={20} color={colors.primaryText} />
         </Pressable>
         <Pressable
           accessibilityLabel="Seleccionar año"
@@ -208,7 +208,7 @@ function HomeScreen({
           style={styles.dateSelectorButton}
         >
           <Text style={styles.dateSelectorText}>{filterYear}</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.primary} />
+          <Ionicons name="chevron-down" size={20} color={colors.primaryText} />
         </Pressable>
       </View>
 
@@ -237,7 +237,7 @@ function HomeScreen({
 
         {loading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color={colors.primary} />
+            <ActivityIndicator color={colors.primaryText} />
             <Text style={styles.loadingText}>Cargando datos guardados...</Text>
           </View>
         ) : (
@@ -415,9 +415,7 @@ function HomeScreen({
                   }}
                   style={styles.yearOption}
                 >
-                  <Text
-                    style={{ color: colors.primary, fontWeight: 500 }}
-                  >
+                  <Text style={{ color: colors.primaryText, fontWeight: 500 }}>
                     {year}
                   </Text>
                 </Pressable>
@@ -477,203 +475,211 @@ function EmptyState({ text }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    gap: 7,
-    backgroundColor: colors.background,
-    paddingBottom: 80,
-  },
-  section: {
-    marginHorizontal: 8,
-    gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
-  loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
-  loadingText: { color: colors.textSecondary },
+    container: {
+      flexGrow: 1,
+      gap: 7,
+      backgroundColor: colors.background,
+      paddingBottom: 80,
+    },
+    section: {
+      marginHorizontal: 8,
+      gap: 12,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 5,
+    },
+    sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
+    loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
+    loadingText: { color: colors.textSecondary },
 
-  emptyState: { paddingVertical: 18, alignItems: "center" },
-  emptyStateText: { color: colors.textMuted, textAlign: "center" },
+    emptyState: { paddingVertical: 18, alignItems: "center" },
+    emptyStateText: { color: colors.textMuted, textAlign: "center" },
 
-  sectionFooter: {
-    paddingTop: 15,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  sectionFooterText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  //  Botones y modales para mes y año
-  dateSelector: {
-    flexDirection: "row",
-    gap: 8,
-    marginHorizontal: 8,
-  },
-  dateSelectorButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  dateSelectorText: { color: colors.textStrong, fontSize: 16, fontWeight: "500" },
-  dateModalBackdrop: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: colors.overlay,
-  },
-  dateModalCard: {
-    padding: 12,
-    gap: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  monthGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 7,
-    justifyContent: "space-between",
-  },
-  monthOption: {
-    width: "32%",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primarySelected,
-  },
-  monthOptionText: {
-    color: colors.primaryText,
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  yearList: { maxHeight: 300 },
-  yearOption: {
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderStrong,
-  },
-  // seccion de cuentas
-  addAccountButton: { paddingVertical: 6, paddingHorizontal: 10 },
-  accountsList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  accountCard: {
-    width: "48.5%",
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "transparent",
-    elevation: 4,
-    shadowColor: "#000000",
-  },
-  selectedAccountCard: { borderColor: colors.text },
-  accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
-  accountCardBalance: {
-    color: "white",
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: colors.overlay,
-    marginBottom: 48,
-  },
-  accountsModalCard: {
-    maxHeight: "78%",
-    padding: 16,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  closeButton: { color: colors.text, fontSize: 15, lineHeight: 28 },
-  accountForm: { flexDirection: "row", gap: 8, marginVertical: 16 },
-  colorPicker: { flexDirection: "row", gap: 12, marginBottom: 16 },
-  colorSwatch: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  selectedColorSwatch: { borderColor: colors.text },
-  accountNameInput: {
-    flex: 1,
-    padding: 12,
-    color: colors.textStrong,
-    fontSize: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderStrong,
-  },
-  accountSaveButton: {
-    justifyContent: "center",
-    paddingHorizontal: 14,
-    backgroundColor: colors.primary,
-    borderRadius: 6,
-  },
-  accountSaveButtonText: { color: "white", fontWeight: "700" },
-  accountManageItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderStrong,
-  },
-  accountManageInfo: { flex: 1 },
-  accountManageName: { color: colors.text, fontSize: 16, fontWeight: "500" },
-  accountManageBalance: { color: colors.textMuted, marginTop: 3 },
-  accountAction: { paddingVertical: 6, paddingHorizontal: 4 },
-  accountActionText: { color: colors.textSecondary, fontWeight: "700" },
-  deleteActionText: { color: colors.negative, fontWeight: "700" },
-  accountLimit: { color: colors.textMuted, textAlign: "right", marginTop: 14 },
-  transferBackdrop: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    backgroundColor: colors.overlay,
-  },
-  transferCard: {
-    gap: 12,
-    padding: 20,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-  },
-  transferDescription: { color: colors.textSecondary, lineHeight: 20 },
-  transferButton: {
-    alignItems: "center",
-    padding: 13,
-    backgroundColor: colors.primary,
-    borderRadius: 6,
-  },
-  transferButtonText: { color: "white", fontWeight: "700" },
-  cancelButton: { alignItems: "center", padding: 10 },
-  cancelButtonText: { color: colors.textSecondary, fontWeight: "700" },
+    sectionFooter: {
+      paddingTop: 15,
+      flexDirection: "row",
+      justifyContent: "flex-end",
+    },
+    sectionFooterText: {
+      color: colors.primaryText,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    //  Botones y modales para mes y año
+    dateSelector: {
+      flexDirection: "row",
+      gap: 8,
+      marginHorizontal: 8,
+    },
+    dateSelectorButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    dateSelectorText: {
+      color: colors.textStrong,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    dateModalBackdrop: {
+      flex: 1,
+      justifyContent: "center",
+      padding: 20,
+      backgroundColor: colors.overlay,
+    },
+    dateModalCard: {
+      padding: 12,
+      gap: 20,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    monthGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 7,
+      justifyContent: "space-between",
+    },
+    monthOption: {
+      width: "32%",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderRadius: 6,
+      backgroundColor: colors.primarySelected,
+    },
+    monthOptionText: {
+      color: colors.primaryTextSoft,
+      fontSize: 15,
+      fontWeight: "500",
+    },
+    yearList: { maxHeight: 300 },
+    yearOption: {
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+    },
+    // seccion de cuentas
+    addAccountButton: { paddingVertical: 6, paddingHorizontal: 10 },
+    accountsList: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+    },
+    accountCard: {
+      width: "48.5%",
+      padding: 8,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: "transparent",
+      elevation: 8,
+      shadowColor: "#000000",
+    },
+    selectedAccountCard: { borderColor: colors.text },
+    accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
+    accountCardBalance: {
+      color: "white",
+      fontSize: 15,
+      fontWeight: "500",
+    },
+    modalBackdrop: {
+      flex: 1,
+      justifyContent: "flex-end",
+      backgroundColor: colors.overlay,
+      marginBottom: 48,
+    },
+    accountsModalCard: {
+      maxHeight: "78%",
+      padding: 16,
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+    },
+    closeButton: { color: colors.text, fontSize: 15, lineHeight: 28 },
+    accountForm: { flexDirection: "row", gap: 8, marginVertical: 16 },
+    colorPicker: { flexDirection: "row", gap: 12, marginBottom: 16 },
+    colorSwatch: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: "transparent",
+    },
+    selectedColorSwatch: { borderColor: colors.text },
+    accountNameInput: {
+      flex: 1,
+      padding: 12,
+      color: colors.textStrong,
+      fontSize: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+    },
+    accountSaveButton: {
+      justifyContent: "center",
+      paddingHorizontal: 14,
+      backgroundColor: colors.primary,
+      borderRadius: 6,
+    },
+    accountSaveButtonText: { color: "white", fontWeight: "700" },
+    accountManageItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderStrong,
+    },
+    accountManageInfo: { flex: 1 },
+    accountManageName: { color: colors.text, fontSize: 16, fontWeight: "500" },
+    accountManageBalance: { color: colors.textMuted, marginTop: 3 },
+    accountAction: { paddingVertical: 6, paddingHorizontal: 4 },
+    accountActionText: { color: colors.textSecondary, fontWeight: "700" },
+    deleteActionText: { color: colors.negative, fontWeight: "700" },
+    accountLimit: {
+      color: colors.textMuted,
+      textAlign: "right",
+      marginTop: 14,
+    },
+    transferBackdrop: {
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
+      backgroundColor: colors.overlay,
+    },
+    transferCard: {
+      gap: 12,
+      padding: 20,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+    },
+    transferDescription: { color: colors.textSecondary, lineHeight: 20 },
+    transferButton: {
+      alignItems: "center",
+      padding: 13,
+      backgroundColor: colors.primary,
+      borderRadius: 6,
+    },
+    transferButtonText: { color: "white", fontWeight: "700" },
+    cancelButton: { alignItems: "center", padding: 10 },
+    cancelButtonText: { color: colors.textSecondary, fontWeight: "700" },
   });
 }
 

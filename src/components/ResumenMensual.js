@@ -443,83 +443,83 @@ function DonutSlices({ data, total, selectedCategory }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-  section: {
-    marginHorizontal: 10,
-    gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
-  description: { color: colors.textSecondary, lineHeight: 20, marginTop: 5 },
-  accountFilterText: { fontSize: 13, fontWeight: "500" },
-  sectionDate: { color: colors.textSecondary, fontSize: 16, marginTop: 5 },
-  monthSummaryRow: {
-    gap: 14,
-  },
+    section: {
+      marginHorizontal: 10,
+      gap: 12,
+      padding: 16,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
+    description: { color: colors.textSecondary, lineHeight: 20, marginTop: 5 },
+    accountFilterText: { fontSize: 13, fontWeight: "500" },
+    sectionDate: { color: colors.textSecondary, fontSize: 16, marginTop: 5 },
+    monthSummaryRow: {
+      gap: 14,
+    },
 
-  // Donut
-  donutWrap: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 6,
-  },
-  donutCenter: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 150,
-    height: 150,
-  },
-  donutLabel: { color: colors.textMuted, fontSize: 14, marginBottom: 4 },
-  donutValue: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  legendList: { gap: 5, marginTop: 4 },
-  legendTitle: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-  },
-  emptyText: { color: colors.textMuted, paddingVertical: 6 },
-  legendItem: {
-    flexDirection: "row",
-    paddingVertical: 13,
-    borderBottomWidth: 1,
-    borderColor: colors.background,
-  },
-  legendLeft: {
-    flex: 3,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-  },
-  legendText: {
-    color: colors.textSecondary,
-    flexShrink: 1,
-    fontSize: 16,
-  },
-  legendMovementInfo: { flex: 1, gap: 2 },
-  legendMovementDetail: { color: colors.textMuted, fontSize: 12 },
-  legendAmount: { color: colors.textStrong, fontWeight: "500", fontSize: 15 },
-  legendAmountColumn: { flex: 2, textAlign: "center" },
-  legendPercentageColumn: {
-    flex: 0.9,
-    textAlign: "right",
-  },
-  showAllLegendButton: { alignSelf: "flex-end", marginTop: 15 },
-  showAllLegendButtonText: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  positive: { color: colors.positive, fontSize: 14 },
-  negative: { color: colors.negative, fontSize: 14 },
+    // Donut
+    donutWrap: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 6,
+    },
+    donutCenter: {
+      position: "absolute",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 150,
+      height: 150,
+    },
+    donutLabel: { color: colors.textMuted, fontSize: 14, marginBottom: 4 },
+    donutValue: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    legendList: { gap: 5, marginTop: 4 },
+    legendTitle: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      marginTop: 10,
+    },
+    emptyText: { color: colors.textMuted, paddingVertical: 6 },
+    legendItem: {
+      flexDirection: "row",
+      paddingVertical: 13,
+      borderBottomWidth: 1,
+      borderColor: colors.background,
+    },
+    legendLeft: {
+      flex: 3,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 15,
+    },
+    legendText: {
+      color: colors.textSecondary,
+      flexShrink: 1,
+      fontSize: 16,
+    },
+    legendMovementInfo: { flex: 1, gap: 2 },
+    legendMovementDetail: { color: colors.textMuted, fontSize: 12 },
+    legendAmount: { color: colors.textStrong, fontWeight: "500", fontSize: 15 },
+    legendAmountColumn: { flex: 2, textAlign: "center" },
+    legendPercentageColumn: {
+      flex: 0.9,
+      textAlign: "right",
+    },
+    showAllLegendButton: { alignSelf: "flex-end", marginTop: 15 },
+    showAllLegendButtonText: {
+      color: colors.primaryText,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    positive: { color: colors.positive, fontSize: 14 },
+    negative: { color: colors.negative, fontSize: 14 },
   });
 }
 

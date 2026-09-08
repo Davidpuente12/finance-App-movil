@@ -302,7 +302,7 @@ function AppContent() {
                 },
                 headerShown: false,
                 tabBarActiveTintColor: "white",
-                tabBarInactiveTintColor: colors.primaryText,
+                tabBarInactiveTintColor: colors.primaryTextSoft,
                 tabBarLabelStyle: styles.tabBarLabel,
                 tabBarStyle: [
                   styles.tabBarTop,

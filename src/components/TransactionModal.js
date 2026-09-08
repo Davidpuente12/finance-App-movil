@@ -254,13 +254,13 @@ function TransactionModal({
                     styles.input,
                     {
                       borderBottomColor: selectedMonto
-                        ? colors.primary
+                        ? colors.primaryText
                         : colors.borderStrong,
                     },
                   ]}
                   placeholder="Monto"
                   placeholderTextColor={
-                    selectedMonto ? colors.primary : colors.inputText
+                    selectedMonto ? colors.primaryText : colors.inputText
                   }
                   value={montoFormat}
                   onChangeText={handleMontoChange}
@@ -275,13 +275,15 @@ function TransactionModal({
                       styles.input,
                       {
                         borderBottomColor: selectedDescription
-                          ? colors.primary
+                          ? colors.primaryText
                           : colors.borderStrong,
                       },
                     ]}
                     placeholder="Descripción"
                     placeholderTextColor={
-                      selectedDescription ? colors.primary : colors.inputText
+                      selectedDescription
+                        ? colors.primaryText
+                        : colors.inputText
                     }
                     value={formDescripcion}
                     onChangeText={setFormDescripcion}
@@ -340,7 +342,7 @@ function TransactionModal({
                       styles.categoryInputRow,
                       {
                         borderBottomColor: selectedCategory
-                          ? colors.primary
+                          ? colors.primaryText
                           : colors.borderStrong,
                       },
                     ]}
@@ -349,7 +351,7 @@ function TransactionModal({
                       style={[styles.input, styles.categoryTextInput]}
                       placeholder="Categoría"
                       placeholderTextColor={
-                        selectedCategory ? colors.primary : colors.inputText
+                        selectedCategory ? colors.primaryText : colors.inputText
                       }
                       value={formCategoria}
                       onChangeText={setFormCategoria}
@@ -575,7 +577,7 @@ function TransactionModal({
                                   : "radio-button-off"
                               }
                               size={20}
-                              color={colors.primary}
+                              color={colors.primaryText}
                             />
                             <Text style={styles.accountName}>
                               {cuenta.nombre}
@@ -650,20 +652,18 @@ function createStyles(colors) {
     },
     sendButton: {
       alignItems: "center",
-      justifyContent: "flex-end",
     },
     iconSend: {
-      color: colors.primary,
+      color: colors.primaryText,
       fontWeight: "500",
       fontSize: 17,
-      marginLeft: "auto",
     },
     // Action bar
     segmented: {
       flexDirection: "row",
       marginBottom: 14,
       marginTop: 14,
-      backgroundColor: colors.background,
+      backgroundColor: colors.border,
       borderRadius: 10,
     },
     segmentButton: {
@@ -684,7 +684,11 @@ function createStyles(colors) {
       borderTopRightRadius: 10,
       borderBottomRightRadius: 10,
     },
-    segmentText: { color: "white", fontWeight: "400", fontSize: 17 },
+    segmentText: {
+      color: colors.surface,
+      fontWeight: "500",
+      fontSize: 17,
+    },
     input: {
       fontSize: 16,
       borderBottomWidth: 1,
@@ -740,7 +744,7 @@ function createStyles(colors) {
       flex: 1,
       backgroundColor: colors.modalOverlay,
       justifyContent: "flex-end",
-      paddingBottom: 60,
+      marginBottom: 49,
     },
     categoryModalCard: {
       maxHeight: "78%",
