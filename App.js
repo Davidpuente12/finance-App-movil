@@ -128,6 +128,7 @@ function AppContent() {
   const [filterYear, setFilterYear] = useState(
     new Date().getFullYear().toString(),
   );
+  const [filterDay, setFilterDay] = useState(null);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
 
   // valores del formulario
@@ -158,15 +159,16 @@ function AppContent() {
         ? item.fecha
         : normalizeFecha(item.fecha);
 
-      const [itemYear, itemMonth] = itemFecha.split("-");
+      const [itemYear, itemMonth, itemDay] = itemFecha.split("-");
 
       const matchYear = Number(itemYear) === Number(filterYear);
 
       const mesNumero = mesesMap[filterMonth]; // Enero=1, Febrero=2...
       const matchMonth = mesNumero ? Number(itemMonth) === mesNumero : true;
-      return matchYear && matchMonth;
+      const matchDay = filterDay ? Number(itemDay) === filterDay : true;
+      return matchYear && matchMonth && matchDay;
     });
-  }, [accountFilteredItems, filterYear, filterMonth]);
+  }, [accountFilteredItems, filterDay, filterYear, filterMonth]);
 
   // Balance, ingresos y gastos
   const totalGastosMensual = useMemo(
@@ -225,7 +227,16 @@ function AppContent() {
           return Number(itemMonth) === mesNumero;
         })();
 
-        return matchSearch && matchYear && matchMonth;
+        const matchDay = (() => {
+          if (!filterDay) return true;
+          const itemFecha = /^\d{4}-\d{2}-\d{2}$/.test(item.fecha)
+            ? item.fecha
+            : normalizeFecha(item.fecha);
+          const [, , itemDay] = itemFecha.split("-");
+          return Number(itemDay) === filterDay;
+        })();
+
+        return matchSearch && matchYear && matchMonth && matchDay;
       })
       .sort((a, b) => {
         const fechaA = normalizeFecha(a.fecha);
@@ -234,7 +245,7 @@ function AppContent() {
         if (fechaA !== fechaB) return fechaB.localeCompare(fechaA);
         return Number(b.id ?? 0) - Number(a.id ?? 0);
       });
-  }, [accountFilteredItems, searchQuery, filterMonth, filterYear]);
+  }, [accountFilteredItems, searchQuery, filterDay, filterMonth, filterYear]);
 
   const openNewModal = () => {
     setEditingTransaction(null);
@@ -295,11 +306,11 @@ function AppContent() {
           >
             <Tab.Navigator
               screenOptions={({ route }) => ({
-                tabBarScrollEnabled: true,
-                tabBarItemStyle: {
-                  width: "auto",
-                  paddingHorizontal: 25,
-                },
+                // tabBarScrollEnabled: true,
+                // tabBarItemStyle: {
+                //   width: "auto",
+                //   paddingHorizontal: 25,
+                // },
                 headerShown: false,
                 tabBarActiveTintColor: "white",
                 tabBarInactiveTintColor: colors.primaryTextSoft,
@@ -310,7 +321,7 @@ function AppContent() {
                 ],
                 tabBarIndicatorStyle: styles.tabBarIndicator,
                 tabBarShowIcon: true,
-                tabBarIcon: ({ color, size }) => {
+                tabBarIcon: ({ color }) => {
                   const iconName =
                     route.name === "Inicio"
                       ? "home-outline"
@@ -318,7 +329,7 @@ function AppContent() {
                         ? "list-outline"
                         : "pie-chart-outline";
 
-                  return <Ionicons name={iconName} size={size} color={color} />;
+                  return <Ionicons name={iconName} size={24} color={color} />;
                 },
               })}
             >
@@ -336,8 +347,10 @@ function AppContent() {
                     openNewModal={openNewModal}
                     filterMonth={filterMonth}
                     filterYear={filterYear}
+                    filterDay={filterDay}
                     setFilterMonth={setFilterMonth}
                     setFilterYear={setFilterYear}
+                    setFilterDay={setFilterDay}
                     cuentas={cuentas}
                     createAccount={createAccount}
                     renameAccount={renameAccount}
@@ -426,12 +439,11 @@ function AppContent() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   tabBarTop: {
-    borderBottomWidth: 1,
-    paddingTop: 50,
+    paddingTop: 40,
     elevation: 8,
+    borderBottomWidth: 1,
     shadowColor: "#000",
     shadowOpacity: 0.18,
-    shadowRadius: 12,
     shadowOffset: { width: 0, height: 2 },
   },
   tabBarIndicator: {
@@ -439,7 +451,7 @@ const styles = StyleSheet.create({
     height: 3,
   },
   tabBarLabel: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "700",
     marginTop: 2,
   },

@@ -439,6 +439,31 @@ const categorias_ingresos = [
     color: "#d9c71f",
   },
   {
+    name: "Propinas",
+    icon: <FontAwesome5 name="hand-holding-usd" size={20} color="white" />,
+    color: "#14b8a6",
+  },
+  {
+    name: "Pension",
+    icon: <MaterialCommunityIcons name="account-cash" size={20} color="white" />,
+    color: "#0ea5e9",
+  },
+  {
+    name: "Prestamos",
+    icon: <MaterialCommunityIcons name="cash-plus" size={20} color="white" />,
+    color: "#f97316",
+  },
+  {
+    name: "Regalos",
+    icon: <FontAwesome5 name="gift" size={20} color="white" />,
+    color: "#8b5cf6",
+  },
+  {
+    name: "Ventas",
+    icon: <MaterialCommunityIcons name="storefront" size={20} color="white" />,
+    color: "#22c55e",
+  },
+  {
     name: "Inversiones",
     icon: <AntDesign name="rise" size={20} color="white" />,
     color: "#84cc16",

@@ -3,48 +3,18 @@ import Svg, { Circle } from "react-native-svg";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import { formatearMonto } from "../utils/formatearMonto";
-import { categorias_gastos } from "../data/categoriasfinas";
+import { categorias_ingresos } from "../data/categoriasfinas";
 import { getMonthYearFiltered } from "../utils/fechaActual";
 import { useTheme } from "../theme/ThemeContext";
 
 function getCategoryInfo(category) {
-  const categoryInfo = categorias_gastos.find(
-    (item) => item.name.toLowerCase() === category,
-  );
-
-  if (categoryInfo) return categoryInfo;
-
-  const parentCategory = categorias_gastos.find((item) =>
-    item.subcategorias?.some(
-      (subcategory) => subcategory.name.toLowerCase() === category,
-    ),
-  );
-  const subcategoryInfo = parentCategory?.subcategorias?.find(
-    (item) => item.name.toLowerCase() === category,
-  );
-
-  if (!subcategoryInfo) {
-    return {
+  return (
+    categorias_ingresos.find(
+      (item) => item.name.toLowerCase() === category,
+    ) ?? {
       icon: <Entypo name="wallet" size={20} color="white" />,
       color: "#2d4473",
-    };
-  }
-
-  return {
-    ...subcategoryInfo,
-    icon: subcategoryInfo.icon ?? parentCategory.icon,
-    color: subcategoryInfo.color ?? parentCategory.color,
-  };
-}
-
-function getParentCategory(category) {
-  return (
-    categorias_gastos.find((item) => item.name.toLowerCase() === category) ||
-    categorias_gastos.find((item) =>
-      item.subcategorias?.some(
-        (subcategory) => subcategory.name.toLowerCase() === category,
-      ),
-    )
+    }
   );
 }
 
@@ -52,9 +22,8 @@ function formatCategoryName(category) {
   return category.length > 14 ? `${category.slice(0, 14)}...` : category;
 }
 
-function ResumenMensualHome({
+function ResumenMensualIngresos({
   selectedMonthItems,
-  totalIngresosMensual,
   filterMonth,
   filterYear,
   selectedAccount,
@@ -64,157 +33,102 @@ function ResumenMensualHome({
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showAllLegendItems, setShowAllLegendItems] = useState(false);
 
-  const monthExpenseItems = useMemo(
+  const monthIncomeItems = useMemo(
     () =>
       selectedMonthItems.filter(
-        (item) => item.tipo === "gasto" && item.categoria !== "Transferencia",
+        (item) => item.tipo === "ingreso" && item.categoria !== "Transferencia",
       ),
     [selectedMonthItems],
   );
 
-  const totalGastosReales = useMemo(
-    () => monthExpenseItems.reduce((total, item) => total + item.monto, 0),
-    [monthExpenseItems],
+  const totalIngresosReales = useMemo(
+    () => monthIncomeItems.reduce((total, item) => total + item.monto, 0),
+    [monthIncomeItems],
   );
 
-  const monthExpenseCategories = useMemo(() => {
+  const monthIncomeCategories = useMemo(() => {
     const totals = new Map();
 
-    monthExpenseItems.forEach((item) => {
-      const categoriaNormalizada = item.categoria.trim().toLowerCase();
-      totals.set(
-        categoriaNormalizada,
-        (totals.get(categoriaNormalizada) ?? 0) + item.monto,
-      );
+    monthIncomeItems.forEach((item) => {
+      const category = item.categoria.trim().toLowerCase();
+      totals.set(category, (totals.get(category) ?? 0) + item.monto);
     });
 
     return Array.from(totals.entries())
       .map(([category, total]) => {
-        const catInfo = getCategoryInfo(category);
-        const porcentajeSobreGastos =
-          totalGastosReales > 0 ? (total / totalGastosReales) * 100 : 0;
-        const porcentajeSobreIngresos =
-          totalIngresosMensual > 0 ? (total / totalIngresosMensual) * 100 : 0;
+        const categoryInfo = getCategoryInfo(category);
 
         return {
-          category: catInfo?.name || category,
+          category: categoryInfo.name || category,
           total,
-          color: catInfo?.color || "#6b7280",
-          icon: catInfo?.icon || null,
-          porcentajeSobreGastos,
-          porcentajeSobreIngresos,
+          color: categoryInfo.color || "#6b7280",
+          icon: categoryInfo.icon || null,
+          percentage:
+            totalIngresosReales > 0 ? (total / totalIngresosReales) * 100 : 0,
         };
       })
-      .sort((a, b) => b.total - a.total);
-  }, [monthExpenseItems, totalGastosReales, totalIngresosMensual]);
+      .sort((firstItem, secondItem) => secondItem.total - firstItem.total);
+  }, [monthIncomeItems, totalIngresosReales]);
 
-  const monthExpenseParentCategories = useMemo(() => {
-    const totals = new Map();
-
-    monthExpenseCategories.forEach((item) => {
-      const parentCategory = getParentCategory(item.category.toLowerCase());
-      const category = parentCategory?.name || item.category;
-      const currentTotal = totals.get(category);
-
-      totals.set(category, {
-        category,
-        total: (currentTotal?.total ?? 0) + item.total,
-        color: parentCategory?.color || item.color,
-      });
-    });
-
-    return Array.from(totals.values()).sort((a, b) => b.total - a.total);
-  }, [monthExpenseCategories]);
-
-  const selectedCategoryExpenses = useMemo(() => {
-    if (!selectedCategory) return [];
-
-    return selectedMonthItems.filter((item) => {
-      if (item.tipo !== "gasto" || item.categoria === "Transferencia") {
-        return false;
-      }
-
-      const parentCategory = getParentCategory(
-        item.categoria.trim().toLowerCase(),
-      );
-      const category = parentCategory?.name || item.categoria;
-
-      return category === selectedCategory;
-    });
-  }, [selectedCategory, selectedMonthItems]);
+  const selectedCategoryIncomes = useMemo(
+    () =>
+      selectedCategory
+        ? selectedMonthItems.filter(
+            (item) =>
+              item.tipo === "ingreso" &&
+              item.categoria !== "Transferencia" &&
+              (getCategoryInfo(item.categoria.trim().toLowerCase()).name ||
+                item.categoria) === selectedCategory,
+          )
+        : [],
+    [selectedCategory, selectedMonthItems],
+  );
 
   const handleDonutPress = (event) => {
     const { locationX, locationY } = event.nativeEvent;
-
     const scale = 180 / 280;
-    const svgX = locationX * scale;
-    const svgY = locationY * scale;
-
-    const centerX = 90;
-    const centerY = 90;
-
-    const dx = svgX - centerX;
-    const dy = svgY - centerY;
-
+    const dx = locationX * scale - 90;
+    const dy = locationY * scale - 90;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance < 50 || distance > 74) {
-      return;
-    }
+    if (distance < 50 || distance > 74) return;
 
-    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
-
-    angle = angle + 90;
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
     if (angle < 0) angle += 360;
-    if (angle >= 360) angle -= 360;
 
     let currentAngle = 0;
 
-    for (let i = 0; i < monthExpenseParentCategories.length; i++) {
-      const item = monthExpenseParentCategories[i];
-      const portion = item.total / totalGastosReales;
-      const segmentDegrees = portion * 360;
+    for (const item of monthIncomeCategories) {
+      const segmentDegrees = (item.total / totalIngresosReales) * 360;
 
-      const startAngle = currentAngle;
-      const endAngle = currentAngle + segmentDegrees;
-
-      if (angle >= startAngle && angle < endAngle) {
-        const category = item.category;
-        setSelectedCategory(selectedCategory === category ? null : category);
+      if (angle >= currentAngle && angle < currentAngle + segmentDegrees) {
+        setSelectedCategory(
+          selectedCategory === item.category ? null : item.category,
+        );
         setShowAllLegendItems(false);
         return;
       }
 
-      currentAngle = endAngle;
+      currentAngle += segmentDegrees;
     }
   };
 
+  const legendItems = selectedCategory
+    ? selectedCategoryIncomes
+    : monthIncomeCategories;
+
   return (
     <View style={styles.section}>
-      {/* Header */}
       <View style={styles.sectionHeader}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text style={styles.sectionTitle}>Resumen mensual de gastos</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.sectionTitle}>Resumen mensual de ingresos</Text>
           <Text style={styles.sectionDate}>
             {getMonthYearFiltered(filterMonth, filterYear)}
           </Text>
         </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <View style={styles.headerRow}>
           <Text style={styles.headerDescription}>
-            {monthExpenseItems.length} movimientos
+            {monthIncomeItems.length} movimientos
           </Text>
           {selectedAccount && (
             <Text
@@ -246,47 +160,36 @@ function ResumenMensualHome({
               strokeWidth="20"
             />
             <DonutSlices
-              data={monthExpenseParentCategories}
-              total={totalGastosReales}
+              data={monthIncomeCategories}
+              total={totalIngresosReales}
               selectedCategory={selectedCategory}
             />
           </Svg>
-
           <View style={styles.donutCenter}>
-            {selectedCategory ? (
-              <>
-                <Text style={styles.donutLabel}>{selectedCategory}</Text>
-                <Text style={styles.donutValue}>
-                  {formatearMonto(
-                    monthExpenseParentCategories.find(
+            <Text style={styles.donutLabel}>
+              {selectedCategory || "Ingresos"}
+            </Text>
+            <Text style={styles.donutValue}>
+              {formatearMonto(
+                selectedCategory
+                  ? monthIncomeCategories.find(
                       (item) => item.category === selectedCategory,
-                    )?.total || 0,
-                  )}
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.donutLabel}>Gastos</Text>
-                <Text style={styles.donutValue}>
-                  {formatearMonto(totalGastosReales)}
-                </Text>
-              </>
-            )}
+                    )?.total || 0
+                  : totalIngresosReales,
+              )}
+            </Text>
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Leyenda */}
       <View style={styles.detailsList}>
-        {/* <View style={styles.legendTitle}>
-          <Text style={{ color: colors.accentLight }}>% sobre Ingresos</Text>
-        </View> */}
-        {monthExpenseCategories.length === 0 ? (
+        {monthIncomeCategories.length === 0 ? (
           <Text style={styles.emptyText}>
-            No hay gastos en el mes seleccionado.
+            No hay ingresos en el mes seleccionado.
           </Text>
         ) : selectedCategory ? (
-          selectedCategoryExpenses
+          legendItems
             .slice(0, showAllLegendItems ? undefined : 5)
             .map((item, index) => {
               const categoryInfo = getCategoryInfo(
@@ -303,28 +206,22 @@ function ResumenMensualHome({
                       React.cloneElement(categoryInfo.icon, {
                         color: categoryInfo.color,
                       })}
-
                     <View style={styles.legendMovementInfo}>
-                      <Text
-                        style={styles.detailsText}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
+                      <Text style={styles.detailsText} numberOfLines={1}>
                         {item.categoria}
                       </Text>
                       {item.descripcion && (
                         <Text
                           style={styles.legendMovementDetail}
                           numberOfLines={1}
-                          ellipsizeMode="tail"
                         >
                           {item.descripcion}
                         </Text>
                       )}
                     </View>
                   </View>
-                  <View style={[styles.legendRightExpanded]}>
-                    <Text style={styles.legendAmount}>
+                  <View style={styles.legendRightExpanded}>
+                    <Text style={styles.legendAmountColumn}>
                       {formatearMonto(item.monto)}
                     </Text>
                     <Text style={styles.legendMovementDetail}>
@@ -335,7 +232,7 @@ function ResumenMensualHome({
               );
             })
         ) : (
-          monthExpenseCategories
+          legendItems
             .slice(0, showAllLegendItems ? undefined : 5)
             .map((item) => (
               <View key={item.category} style={styles.detailsItem}>
@@ -348,48 +245,38 @@ function ResumenMensualHome({
                   >
                     {item.icon}
                   </View>
-                  <Text
-                    style={styles.detailsText}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
+                  <Text style={styles.detailsText} numberOfLines={1}>
                     {formatCategoryName(item.category)}
                   </Text>
                 </View>
 
                 <View style={styles.legendRight}>
-                  <Text
-                    style={[styles.legendAmount, styles.legendAmountColumn]}
-                  >
+                  <Text style={styles.legendAmountColumn}>
                     {formatearMonto(item.total)}
                   </Text>
                   <Text style={styles.legendPercentageColumn}>
-                    {item.porcentajeSobreIngresos.toFixed()}%
+                    {item.percentage.toFixed()}%
                   </Text>
                 </View>
               </View>
             ))
         )}
-        {(selectedCategory ? selectedCategoryExpenses : monthExpenseCategories)
-          .length > 5 &&
-          !showAllLegendItems && (
-            <TouchableOpacity
-              accessibilityLabel="Ver todos los elementos de la leyenda"
-              onPress={() => setShowAllLegendItems(true)}
-              style={styles.showAllLegendButton}
-            >
-              <Text style={styles.showAllLegendButtonText}>Ver todos</Text>
-            </TouchableOpacity>
-          )}
+        {legendItems.length > 5 && !showAllLegendItems && (
+          <TouchableOpacity
+            accessibilityLabel="Ver todos los elementos de la leyenda"
+            onPress={() => setShowAllLegendItems(true)}
+            style={styles.showAllLegendButton}
+          >
+            <Text style={styles.showAllLegendButtonText}>Ver todos</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 }
 
 function DonutSlices({ data, total, selectedCategory }) {
-  if (total <= 0 || data.length === 0) {
-    return null;
-  }
+  if (total <= 0 || data.length === 0) return null;
 
   const radius = 62;
   const circumference = 2 * Math.PI * radius;
@@ -399,7 +286,6 @@ function DonutSlices({ data, total, selectedCategory }) {
     const dashLength = (item.total / total) * circumference;
     const dashOffset = circumference - accumulated;
     const isSelected = selectedCategory === item.category;
-    const currentStrokeWidth = isSelected ? 25 : 20;
     accumulated += dashLength;
 
     return (
@@ -410,7 +296,7 @@ function DonutSlices({ data, total, selectedCategory }) {
         r={radius}
         fill="transparent"
         stroke={item.color}
-        strokeWidth={currentStrokeWidth}
+        strokeWidth={isSelected ? 25 : 20}
         strokeDasharray={`${dashLength} ${circumference - dashLength}`}
         strokeDashoffset={dashOffset}
         rotation="-90"
@@ -424,7 +310,7 @@ function DonutSlices({ data, total, selectedCategory }) {
 function createStyles(colors) {
   return StyleSheet.create({
     section: {
-      margin: 5,
+      marginHorizontal: 5,
       gap: 12,
       padding: 16,
       borderRadius: 12,
@@ -432,22 +318,17 @@ function createStyles(colors) {
       borderWidth: 1,
       borderColor: colors.borderStrong,
     },
-    sectionHeader: {
-      gap: 5,
+    sectionHeader: { gap: 5 },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
     },
     sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
-    headerDescription: {
-      color: colors.textSecondary,
-      lineHeight: 20,
-    },
+    headerDescription: { color: colors.textSecondary, lineHeight: 20 },
     sectionDate: { color: colors.textSecondary, fontSize: 16, marginTop: 5 },
     accountFilterText: { fontSize: 14, fontWeight: "500" },
-
-    // Donut
-    donutWrap: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
+    donutWrap: { alignItems: "center", justifyContent: "center" },
     donutCenter: {
       position: "absolute",
       alignItems: "center",
@@ -462,14 +343,7 @@ function createStyles(colors) {
       fontWeight: "600",
       textAlign: "center",
     },
-
-    // Leyenda Detallada
     detailsList: { minHeight: 350, gap: 5, marginTop: 4, paddingBottom: 20 },
-    legendTitle: {
-      flexDirection: "row",
-      justifyContent: "flex-end",
-      marginTop: 10,
-    },
     detailsItem: {
       flexDirection: "row",
       alignItems: "center",
@@ -507,19 +381,21 @@ function createStyles(colors) {
     },
     legendMovementInfo: { flex: 1, gap: 2 },
     legendMovementDetail: { color: colors.textMuted, fontSize: 12 },
-    legendAmount: { color: colors.negative, fontWeight: "500", fontSize: 15 },
     legendAmountColumn: {
       flex: 2,
+      color: colors.positive,
+      fontWeight: "500",
+      fontSize: 15,
       textAlign: "right",
     },
     legendPercentageColumn: {
       flex: 0.8,
       color: colors.text,
-      backgroundColor: "#009032",
+      backgroundColor: colors.primarySelected,
+      textAlign: "center",
       borderRadius: 5,
       fontSize: 13,
       fontWeight: "500",
-      textAlign: "center",
     },
     showAllLegendButton: { alignSelf: "flex-end", marginTop: 15 },
     showAllLegendButtonText: {
@@ -527,25 +403,8 @@ function createStyles(colors) {
       fontSize: 15,
       fontWeight: "600",
     },
-    negative: { color: colors.negative, fontSize: 14 },
-    neutral: { color: colors.accentLight, fontSize: 14 },
-
     emptyText: { color: colors.textMuted, paddingVertical: 6 },
-
-    // Footer
-    sectionFooter: {
-      borderTopWidth: 1,
-      borderColor: colors.border,
-      paddingTop: 15,
-      flexDirection: "row",
-      justifyContent: "flex-end",
-    },
-    sectionFooterText: {
-      color: colors.primaryText,
-      fontSize: 15,
-      fontWeight: "600",
-    },
   });
 }
 
-export { ResumenMensualHome };
+export { ResumenMensualIngresos };

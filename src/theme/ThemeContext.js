@@ -4,7 +4,7 @@ import { useColorScheme } from "react-native";
 const themes = {
   dark: {
     background: "rgb(32, 32, 38)",
-    surface: "rgb(20, 23, 28)",
+    surface: "rgba(20, 23, 28, 0.8)",
     surfaceElevated: "rgba(30, 41, 59, 0.7)",
     border: "#1e293b",
     borderStrong: "#334155",
@@ -19,7 +19,7 @@ const themes = {
     primarySoft: "rgba(79, 57, 246, 0.2)",
     primarySelected: "rgba(79, 57, 246, 0.7)",
     inputText: "rgb(200, 200, 200)",
-    overlay: "rgba(0, 0, 0, 0.6)",
+    overlay: "rgba(0, 0, 0, 0.9)",
     modalOverlay: "rgba(25, 25, 25, 0.72)",
     positive: "#34d399",
     negative: "#fb7185",
@@ -51,7 +51,7 @@ const themes = {
     positive: "#059669",
     negative: "#e11d48",
     negativeSoft: "#be123c",
-    expense: "#dc2626",
+    expense: "rgb(254, 83, 83)",
     income: "#059669",
     accent: "#0284c7",
     accentLight: "#0369a1",

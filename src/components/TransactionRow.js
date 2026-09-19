@@ -5,12 +5,21 @@ import {
   categorias_ingresos,
 } from "../data/categoriasfinas.js";
 import Entypo from "@expo/vector-icons/Entypo";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../theme/ThemeContext";
 
 const getCategoryIcon = (categoria, tipo, styles, colors) => {
+  if (categoria === "Transferencia") {
+    return (
+      <View style={[styles.categoryIcon, { backgroundColor: colors.primary }]}>
+        <Ionicons name="swap-horizontal" size={22} color="white" />
+      </View>
+    );
+  }
+
   if (!categoria) {
     return (
-      <View style={[styles.categoryIcon, { backgroundColor: "transparent" }]}>
+      <View style={[styles.categoryIcon, { backgroundColor: "#2d4473" }]}>
         <Entypo name="wallet" size={20} color={colors.text} />
       </View>
     );
@@ -32,7 +41,7 @@ const getCategoryIcon = (categoria, tipo, styles, colors) => {
       <View
         style={[
           styles.categoryIcon,
-          { backgroundColor: topCat.color || "transparent" },
+          { backgroundColor: topCat.color || "#2d4473" },
         ]}
       >
         {topCat.icon}
@@ -54,7 +63,7 @@ const getCategoryIcon = (categoria, tipo, styles, colors) => {
           <View
             style={[
               styles.categoryIcon,
-              { backgroundColor: color || "transparent" },
+              { backgroundColor: color || "#2d4473" },
             ]}
           >
             {icon}
@@ -65,7 +74,7 @@ const getCategoryIcon = (categoria, tipo, styles, colors) => {
   }
 
   return (
-    <View style={[styles.categoryIcon, { backgroundColor: "transparent" }]}>
+    <View style={[styles.categoryIcon, { backgroundColor: "#2d4473" }]}>
       <Entypo name="wallet" size={20} color={colors.text} />
     </View>
   );
@@ -109,29 +118,37 @@ function TransactionRow({ item, cuentas, onEdit }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-  transactionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  transactionInfo: { flex: 1, gap: 4 },
-  transactionTitle: { color: colors.textStrong, fontSize: 16, fontWeight: "600" },
-  accountName: { color: colors.textSecondary, fontSize: 13, fontWeight: "600" },
-  transactionSubtitle: { color: colors.textMuted, fontSize: 13 },
-  transactionActions: { alignItems: "flex-end", gap: 6 },
-  transactionAmount: { fontWeight: "600", fontSize: 16 },
-  amountPositive: { color: colors.positive },
-  amountNegative: { color: colors.negative },
-  categoryIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    transactionRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 12,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    transactionInfo: { flex: 1, gap: 4 },
+    transactionTitle: {
+      color: colors.textStrong,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    accountName: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    transactionSubtitle: { color: colors.textMuted, fontSize: 13 },
+    transactionActions: { alignItems: "flex-end", gap: 6 },
+    transactionAmount: { fontWeight: "600", fontSize: 16 },
+    amountPositive: { color: colors.positive },
+    amountNegative: { color: colors.negative },
+    categoryIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
   });
 }
 

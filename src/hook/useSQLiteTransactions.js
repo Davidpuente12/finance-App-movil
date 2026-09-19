@@ -148,7 +148,10 @@ export function useSQLiteTransactions() {
     }
   };
 
-  const saveTransfer = async ({ monto, fecha, origen, destino }) => {
+  const saveTransfer = async (
+    { monto, fecha, origen, destino },
+    editingTransaction,
+  ) => {
     const normalizedDate = normalizeFecha(fecha);
     const originTransaction = {
       tipo: "gasto",
@@ -167,26 +170,90 @@ export function useSQLiteTransactions() {
       cuenta_id: destino.id,
     };
 
+    const pairedTransaction = editingTransaction
+      ? lista
+          .filter((current) => {
+            const isOrigin = editingTransaction.tipo === "gasto";
+            const currentAccount = cuentas.find(
+              (cuenta) => cuenta.id === editingTransaction.cuenta_id,
+            );
+            const pairedDescription = currentAccount
+              ? isOrigin
+                ? `Transferencia desde ${currentAccount.nombre}`
+                : `Transferencia a ${currentAccount.nombre}`
+              : null;
+
+            return (
+              current.id !== editingTransaction.id &&
+              current.categoria === "Transferencia" &&
+              current.tipo === (isOrigin ? "ingreso" : "gasto") &&
+              Number(current.monto) === Number(editingTransaction.monto) &&
+              normalizeFecha(current.fecha) ===
+                normalizeFecha(editingTransaction.fecha) &&
+              current.descripcion === pairedDescription
+            );
+          })
+          .sort(
+            (first, second) =>
+              Math.abs(Number(first.id) - Number(editingTransaction.id)) -
+              Math.abs(Number(second.id) - Number(editingTransaction.id)),
+          )[0]
+      : null;
+
+    if (editingTransaction && !pairedTransaction) return false;
+
     try {
       let originId;
       let destinationId;
       await db.withTransactionAsync(async () => {
-        const destinationResult = await db.runAsync(
-          "INSERT INTO transacciones (tipo, monto, categoria, descripcion, fecha, cuenta_id) VALUES (?, ?, ?, ?, ?, ?);",
-          Object.values(destinationTransaction),
-        );
-        const originResult = await db.runAsync(
-          "INSERT INTO transacciones (tipo, monto, categoria, descripcion, fecha, cuenta_id) VALUES (?, ?, ?, ?, ?, ?);",
-          Object.values(originTransaction),
-        );
-        destinationId = destinationResult.lastInsertRowId ?? null;
-        originId = originResult.lastInsertRowId ?? null;
+        if (editingTransaction) {
+          originId =
+            editingTransaction.tipo === "gasto"
+              ? editingTransaction.id
+              : pairedTransaction.id;
+          destinationId =
+            editingTransaction.tipo === "ingreso"
+              ? editingTransaction.id
+              : pairedTransaction.id;
+
+          await db.runAsync(
+            "UPDATE transacciones SET tipo=?, monto=?, categoria=?, descripcion=?, fecha=?, cuenta_id=? WHERE id=?;",
+            [...Object.values(originTransaction), originId],
+          );
+          await db.runAsync(
+            "UPDATE transacciones SET tipo=?, monto=?, categoria=?, descripcion=?, fecha=?, cuenta_id=? WHERE id=?;",
+            [...Object.values(destinationTransaction), destinationId],
+          );
+        } else {
+          const destinationResult = await db.runAsync(
+            "INSERT INTO transacciones (tipo, monto, categoria, descripcion, fecha, cuenta_id) VALUES (?, ?, ?, ?, ?, ?);",
+            Object.values(destinationTransaction),
+          );
+          const originResult = await db.runAsync(
+            "INSERT INTO transacciones (tipo, monto, categoria, descripcion, fecha, cuenta_id) VALUES (?, ?, ?, ?, ?, ?);",
+            Object.values(originTransaction),
+          );
+          destinationId = destinationResult.lastInsertRowId ?? null;
+          originId = originResult.lastInsertRowId ?? null;
+        }
       });
-      setLista((current) => [
-        ...current,
-        { ...originTransaction, id: originId },
-        { ...destinationTransaction, id: destinationId },
-      ]);
+      setLista((current) =>
+        editingTransaction
+          ? current.map((item) => {
+              if (item.id === originId) {
+                return { ...originTransaction, id: originId };
+              }
+              if (item.id === destinationId) {
+                return { ...destinationTransaction, id: destinationId };
+              }
+              return item;
+            })
+          : [
+              ...current,
+              { ...originTransaction, id: originId },
+              { ...destinationTransaction, id: destinationId },
+            ],
+      );
       return true;
     } catch (error) {
       globalThis.console.error("Error guardando transferencia:", error);

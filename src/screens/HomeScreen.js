@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -11,17 +10,15 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
-
 import { Balance } from "../components/Balance";
-import { TransactionRow } from "../components/TransactionRow";
 import { ResumenMensualHome } from "../components/ResumenMensualHome";
-import { useNavigation } from "@react-navigation/native";
+import { ResumenMensualIngresos } from "../components/ResumenMensualIngresos";
 import { mesesMap, yearsArray } from "../utils/fechaActual";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useTheme } from "../theme/ThemeContext";
-// import { getMonthYearFiltered } from "../utils/fechaActual";
 
 const accountColors = [
   "rgb(254, 83, 83)",
@@ -36,18 +33,17 @@ const accountColors = [
 ];
 
 function HomeScreen({
-  loading,
   selectedMonthItems,
   balanceTotal,
   totalIngresosMensual,
   totalGastosMensual,
   formatearMonto,
-  openEditModal,
-  deleteTransaction,
   filterMonth,
   filterYear,
+  filterDay,
   setFilterMonth,
   setFilterYear,
+  setFilterDay,
   cuentas,
   lista,
   createAccount,
@@ -65,13 +61,17 @@ function HomeScreen({
   const [accountToDelete, setAccountToDelete] = useState(null);
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [showYearModal, setShowYearModal] = useState(false);
+  const [showDayModal, setShowDayModal] = useState(false);
   const mesesArray = Object.keys(mesesMap);
-  const latestTransactions = [...selectedMonthItems].sort((a, b) => {
-    const dateDifference = new Date(b.fecha) - new Date(a.fecha);
-    if (dateDifference !== 0) return dateDifference;
-
-    return Number(b.id ?? 0) - Number(a.id ?? 0);
-  });
+  const daysInSelectedMonth = new Date(
+    Number(filterYear),
+    mesesMap[filterMonth],
+    0,
+  ).getDate();
+  const daysArray = Array.from(
+    { length: daysInSelectedMonth },
+    (_, index) => index + 1,
+  );
 
   const accountBalances = cuentas.map((cuenta) => ({
     ...cuenta,
@@ -83,8 +83,6 @@ function HomeScreen({
         0,
       ),
   }));
-
-  const navigation = useNavigation();
 
   const handleSaveAccount = async () => {
     const normalizedName = accountName.trim();
@@ -150,7 +148,8 @@ function HomeScreen({
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.section, { marginTop: 8 }]}>
+      {/* Cuentas */}
+      <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Cuentas</Text>
           <Pressable
@@ -193,81 +192,77 @@ function HomeScreen({
         </View>
       </View>
 
-      <View style={styles.dateSelector}>
-        <Pressable
-          accessibilityLabel="Seleccionar mes"
-          onPress={() => setShowMonthModal(true)}
-          style={styles.dateSelectorButton}
-        >
-          <Text style={styles.dateSelectorText}>{filterMonth}</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.primaryText} />
-        </Pressable>
-        <Pressable
-          accessibilityLabel="Seleccionar año"
-          onPress={() => setShowYearModal(true)}
-          style={styles.dateSelectorButton}
-        >
-          <Text style={styles.dateSelectorText}>{filterYear}</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.primaryText} />
-        </Pressable>
-      </View>
+      {/* Balance */}
+      <View style={styles.sectionBalance}>
+        <View style={styles.dateSelector}>
+          <Pressable
+            accessibilityLabel="Seleccionar día"
+            onPress={() => setShowDayModal(true)}
+            style={styles.dateSelectorButton}
+          >
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={colors.primaryText}
+            />
+            <Text style={styles.dateSelectorText}>
+              {filterDay ? `Día ${filterDay}` : "Día"}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Seleccionar mes"
+            onPress={() => setShowMonthModal(true)}
+            style={styles.dateSelectorButton}
+          >
+            <Text style={styles.dateSelectorText}>{filterMonth}</Text>
+            <Ionicons
+              name="chevron-down"
+              size={20}
+              color={colors.primaryText}
+            />
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Seleccionar año"
+            onPress={() => setShowYearModal(true)}
+            style={styles.dateSelectorButton}
+          >
+            <Text style={styles.dateSelectorText}>{filterYear}</Text>
+            <Ionicons
+              name="chevron-down"
+              size={20}
+              color={colors.primaryText}
+            />
+          </Pressable>
+        </View>
 
-      <Balance
-        balanceTotal={balanceTotal}
-        totalIngresosMensual={totalIngresosMensual}
-        totalGastosMensual={totalGastosMensual}
-        filterMonth={filterMonth}
-        filterYear={filterYear}
-      />
-      {/* </View> */}
+        <Balance
+          balanceTotal={balanceTotal}
+          totalIngresosMensual={totalIngresosMensual}
+          totalGastosMensual={totalGastosMensual}
+          filterMonth={filterMonth}
+          filterYear={filterYear}
+        />
+      </View>
 
       <ResumenMensualHome
         selectedMonthItems={selectedMonthItems}
         totalIngresosMensual={totalIngresosMensual}
         totalGastosMensual={totalGastosMensual}
+        filterMonth={filterMonth}
+        filterYear={filterYear}
         selectedAccount={cuentas.find(
           (cuenta) => cuenta.id === selectedAccountId,
         )}
       />
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Últimos registros</Text>
-        </View>
-
-        {loading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={colors.primaryText} />
-            <Text style={styles.loadingText}>Cargando datos guardados...</Text>
-          </View>
-        ) : (
-          <View>
-            {latestTransactions.length === 0 ? (
-              <EmptyState text="Aún no hay transacciones registradas." />
-            ) : (
-              latestTransactions
-                .slice(0, 5)
-                .map((item) => (
-                  <TransactionRow
-                    key={item.id}
-                    item={item}
-                    cuentas={cuentas}
-                    formatearMonto={formatearMonto}
-                    onEdit={() => openEditModal(item)}
-                    onDelete={() => deleteTransaction(item.id)}
-                  />
-                ))
-            )}
-          </View>
+      <ResumenMensualIngresos
+        selectedMonthItems={selectedMonthItems}
+        filterMonth={filterMonth}
+        filterYear={filterYear}
+        selectedAccount={cuentas.find(
+          (cuenta) => cuenta.id === selectedAccountId,
         )}
-
-        <Pressable
-          onPress={() => navigation.navigate("Registros")}
-          style={styles.sectionFooter}
-        >
-          <Text style={styles.sectionFooterText}>Mostras mas</Text>
-        </Pressable>
-      </View>
+      />
 
       <Modal
         visible={accountsModalVisible}
@@ -275,88 +270,97 @@ function HomeScreen({
         transparent
         onRequestClose={closeAccountsModal}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalBackdrop}
-        >
-          <View style={styles.accountsModalCard}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Administrar cuentas</Text>
-              <Pressable onPress={closeAccountsModal} hitSlop={8}>
-                <Text style={styles.closeButton}>⨉</Text>
-              </Pressable>
-            </View>
-            <View style={styles.accountForm}>
-              <TextInput
-                style={styles.accountNameInput}
-                placeholder={
-                  editingAccount ? "Nuevo nombre" : "Nombre de la cuenta"
-                }
-                placeholderTextColor={colors.textMuted}
-                value={accountName}
-                onChangeText={setAccountName}
-                maxLength={30}
-              />
-              <Pressable
-                style={styles.accountSaveButton}
-                onPress={handleSaveAccount}
-              >
-                <Text style={styles.accountSaveButtonText}>
-                  {editingAccount ? "Guardar" : "Añadir"}
-                </Text>
-              </Pressable>
-            </View>
-            <View style={styles.colorPicker}>
-              {accountColors.map((color) => (
-                <Pressable
-                  key={color}
-                  accessibilityLabel={`Seleccionar color ${color}`}
-                  onPress={() => setAccountColor(color)}
-                  style={[
-                    styles.colorSwatch,
-                    { backgroundColor: color },
-                    accountColor === color && styles.selectedColorSwatch,
-                  ]}
+        <SafeAreaView style={styles.modalBackdrop} edges={["bottom"]}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1, justifyContent: "flex-end" }}
+          >
+            <View style={styles.accountsModalCard}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Administrar cuentas</Text>
+                <Pressable onPress={closeAccountsModal} hitSlop={8}>
+                  <Text style={styles.closeButton}>⨉</Text>
+                </Pressable>
+              </View>
+              <View style={styles.accountForm}>
+                <TextInput
+                  style={styles.accountNameInput}
+                  placeholder={
+                    editingAccount ? "Nuevo nombre" : "Nombre de la cuenta"
+                  }
+                  placeholderTextColor={colors.textMuted}
+                  value={accountName}
+                  onChangeText={setAccountName}
+                  maxLength={30}
                 />
-              ))}
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {accountBalances.map((cuenta) => (
-                <View key={cuenta.id} style={styles.accountManageItem}>
-                  <View style={styles.accountManageInfo}>
-                    <Text style={styles.accountManageName}>
-                      {cuenta.nombre}
-                    </Text>
-                    <Text style={styles.accountManageBalance}>
-                      {formatearMonto(cuenta.saldo)}
-                    </Text>
-                  </View>
+                <Pressable
+                  style={styles.accountSaveButton}
+                  onPress={handleSaveAccount}
+                >
+                  <Text style={styles.accountSaveButtonText}>
+                    {editingAccount ? "Guardar" : "Añadir"}
+                  </Text>
+                </Pressable>
+              </View>
+
+              <View style={styles.colorPicker}>
+                {accountColors.map((color) => (
                   <Pressable
-                    accessibilityLabel={`Renombrar ${cuenta.nombre}`}
-                    onPress={() => {
-                      setEditingAccount(cuenta);
-                      setAccountName(cuenta.nombre);
-                      setAccountColor(cuenta.color ?? accountColors[0]);
-                    }}
-                    style={styles.accountAction}
-                  >
-                    <Text style={styles.accountActionText}>Editar</Text>
-                  </Pressable>
-                  {cuentas.length > 1 && (
+                    key={color}
+                    accessibilityLabel={`Seleccionar color ${color}`}
+                    onPress={() => setAccountColor(color)}
+                    style={[
+                      styles.colorSwatch,
+                      { backgroundColor: color },
+                      accountColor === color && styles.selectedColorSwatch,
+                    ]}
+                  />
+                ))}
+              </View>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                style={{ marginTop: 30 }}
+              >
+                {accountBalances.map((cuenta) => (
+                  <View key={cuenta.id} style={styles.accountManageItem}>
+                    <View style={styles.accountManageInfo}>
+                      <Text style={styles.accountManageName}>
+                        {cuenta.nombre}
+                      </Text>
+                      <Text style={styles.accountManageBalance}>
+                        {formatearMonto(cuenta.saldo)}
+                      </Text>
+                    </View>
                     <Pressable
-                      accessibilityLabel={`Eliminar ${cuenta.nombre}`}
-                      onPress={() => setAccountToDelete(cuenta)}
+                      accessibilityLabel={`Renombrar ${cuenta.nombre}`}
+                      onPress={() => {
+                        setEditingAccount(cuenta);
+                        setAccountName(cuenta.nombre);
+                        setAccountColor(cuenta.color ?? accountColors[0]);
+                      }}
                       style={styles.accountAction}
                     >
-                      <Text style={styles.deleteActionText}>Eliminar</Text>
+                      <Text style={styles.accountActionText}>Editar</Text>
                     </Pressable>
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-            <Text style={styles.accountLimit}>{cuentas.length}/10 cuentas</Text>
-          </View>
-        </KeyboardAvoidingView>
+                    {cuentas.length > 1 && (
+                      <Pressable
+                        accessibilityLabel={`Eliminar ${cuenta.nombre}`}
+                        onPress={() => setAccountToDelete(cuenta)}
+                        style={styles.accountAction}
+                      >
+                        <Text style={styles.deleteActionText}>Eliminar</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
+              <Text style={styles.accountLimit}>
+                {cuentas.length}/10 cuentas
+              </Text>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </Modal>
 
       <Modal
@@ -379,6 +383,7 @@ function HomeScreen({
                   key={mes}
                   onPress={() => {
                     setFilterMonth(mes);
+                    setFilterDay(null);
                     setShowMonthModal(false);
                   }}
                   style={styles.monthOption}
@@ -411,6 +416,7 @@ function HomeScreen({
                   key={year}
                   onPress={() => {
                     setFilterYear(year.toString());
+                    setFilterDay(null);
                     setShowYearModal(false);
                   }}
                   style={styles.yearOption}
@@ -420,6 +426,62 @@ function HomeScreen({
                   </Text>
                 </Pressable>
               ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal para filtro diario */}
+      <Modal
+        visible={showDayModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDayModal(false)}
+      >
+        <View style={styles.dateModalBackdrop}>
+          <View style={styles.dateModalCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Días de {filterMonth} de {filterYear}
+              </Text>
+              <Pressable onPress={() => setShowDayModal(false)} hitSlop={8}>
+                <Text style={styles.closeButton}>⨉</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              onPress={() => {
+                setFilterDay(null);
+                setShowDayModal(false);
+              }}
+              style={styles.allDaysOption}
+            >
+              <Text style={styles.monthOptionText}>Todos los días</Text>
+            </Pressable>
+            <ScrollView style={styles.dayList}>
+              <View style={styles.dayGrid}>
+                {daysArray.map((day) => (
+                  <Pressable
+                    key={day}
+                    onPress={() => {
+                      setFilterDay(day);
+                      setShowDayModal(false);
+                    }}
+                    style={[
+                      styles.dayOption,
+                      filterDay === day && styles.selectedDayOption,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.monthOptionText,
+                        filterDay === day && styles.selectedDayOptionText,
+                      ]}
+                    >
+                      {day}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -462,47 +524,29 @@ function HomeScreen({
   );
 }
 
-function EmptyState({ text }) {
-  const { colors } = useTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyStateText}>{text}</Text>
-    </View>
-  );
-}
-
 function createStyles(colors) {
   return StyleSheet.create({
     container: {
       flexGrow: 1,
-      gap: 7,
       backgroundColor: colors.background,
-      paddingBottom: 80,
+      paddingBottom: 60,
     },
     section: {
-      marginHorizontal: 8,
+      margin: 5,
       gap: 12,
-      padding: 16,
+      padding: 14,
       borderRadius: 12,
       backgroundColor: colors.surface,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.borderStrong,
     },
     sectionHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 5,
+      marginBottom: 4,
     },
     sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
-    loadingBox: { alignItems: "center", gap: 8, paddingVertical: 16 },
-    loadingText: { color: colors.textSecondary },
-
-    emptyState: { paddingVertical: 18, alignItems: "center" },
-    emptyStateText: { color: colors.textMuted, textAlign: "center" },
-
     sectionFooter: {
       paddingTop: 15,
       flexDirection: "row",
@@ -513,27 +557,30 @@ function createStyles(colors) {
       fontSize: 16,
       fontWeight: "500",
     },
-    //  Botones y modales para mes y año
+    // Seccion balance
+    sectionBalance: {
+      marginHorizontal: 5,
+    },
     dateSelector: {
+      backgroundColor: colors.primarySoft,
+      padding: 12,
+      borderTopEndRadius: 12,
+      borderTopStartRadius: 12,
+      borderWidth: 0.5,
+      borderColor: colors.primaryText,
       flexDirection: "row",
-      gap: 8,
-      marginHorizontal: 8,
     },
     dateSelectorButton: {
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      justifyContent: "center",
+      gap: 10,
       paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.surface,
     },
     dateSelectorText: {
-      color: colors.textStrong,
-      fontSize: 16,
+      color: colors.primaryTextSoft,
+      fontSize: 14,
       fontWeight: "500",
     },
     dateModalBackdrop: {
@@ -556,16 +603,38 @@ function createStyles(colors) {
       gap: 7,
       justifyContent: "space-between",
     },
-    monthOption: {
-      width: "32%",
+    dayList: { maxHeight: 300 },
+    dayGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      justifyContent: "center",
+    },
+    allDaysOption: {
       alignItems: "center",
       paddingVertical: 12,
       borderRadius: 6,
       backgroundColor: colors.primarySelected,
     },
+    dayOption: {
+      width: "18%",
+      alignItems: "center",
+      paddingVertical: 10,
+      borderRadius: 6,
+      backgroundColor: colors.primarySoft,
+    },
+    selectedDayOption: { backgroundColor: colors.primarySelected },
+    selectedDayOptionText: { color: "white" },
+    monthOption: {
+      width: "32%",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderRadius: 6,
+      backgroundColor: colors.primarySoft,
+    },
     monthOptionText: {
       color: colors.primaryTextSoft,
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: "500",
     },
     yearList: { maxHeight: 300 },
@@ -584,7 +653,8 @@ function createStyles(colors) {
     },
     accountCard: {
       width: "48.5%",
-      padding: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
       borderRadius: 8,
       borderWidth: 2,
       borderColor: "transparent",
@@ -592,7 +662,7 @@ function createStyles(colors) {
       shadowColor: "#000000",
     },
     selectedAccountCard: { borderColor: colors.text },
-    accountCardName: { color: "white", fontSize: 15, fontWeight: "600" },
+    accountCardName: { color: "white", fontSize: 14, fontWeight: "600" },
     accountCardBalance: {
       color: "white",
       fontSize: 15,
@@ -602,7 +672,6 @@ function createStyles(colors) {
       flex: 1,
       justifyContent: "flex-end",
       backgroundColor: colors.overlay,
-      marginBottom: 48,
     },
     accountsModalCard: {
       maxHeight: "78%",
@@ -610,6 +679,8 @@ function createStyles(colors) {
       backgroundColor: colors.surface,
       borderTopLeftRadius: 12,
       borderTopRightRadius: 12,
+      borderColor: colors.border,
+      borderWidth: 1,
     },
     closeButton: { color: colors.text, fontSize: 15, lineHeight: 28 },
     accountForm: { flexDirection: "row", gap: 8, marginVertical: 16 },

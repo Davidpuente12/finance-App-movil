@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import {
   categorias_gastos,
   categorias_ingresos,
@@ -81,12 +80,15 @@ function TransactionModal({
         return;
       }
 
-      const ok = await saveTransfer({
-        monto: montoValue,
-        fecha: formFecha,
-        origen,
-        destino,
-      });
+      const ok = await saveTransfer(
+        {
+          monto: montoValue,
+          fecha: formFecha,
+          origen,
+          destino,
+        },
+        editingTransaction,
+      );
       if (ok) handleOpen();
       else setValidationMessage("No se pudo guardar la transferencia.");
       return;
@@ -174,26 +176,20 @@ function TransactionModal({
               </View>
 
               <View style={styles.actionBar}>
-                <View style={styles.iconDeleteSpace}>
-                  {editingTransaction && (
-                    <Pressable
-                      style={styles.iconDelete}
-                      onPress={() => {
-                        deleteTransaction(editingTransaction);
-                        handleOpen();
-                      }}
-                    >
-                      <Ionicons
-                        name="trash-outline"
-                        size={21}
-                        color={colors.expense}
-                      />
-                    </Pressable>
-                  )}
-                </View>
+                {editingTransaction && (
+                  <Pressable
+                    style={styles.deleteButton}
+                    onPress={() => {
+                      deleteTransaction(editingTransaction);
+                      handleOpen();
+                    }}
+                  >
+                    <Text style={styles.textButton}>Eliminar</Text>
+                  </Pressable>
+                )}
 
                 <Pressable style={styles.sendButton} onPress={handleSave}>
-                  <Text style={styles.iconSend}>Guardar</Text>
+                  <Text style={styles.textButton}>Guardar</Text>
                 </Pressable>
               </View>
             </View>
@@ -211,7 +207,14 @@ function TransactionModal({
                   resetInputSelection();
                 }}
               >
-                <Text style={styles.segmentText}>Gastos</Text>
+                <Text
+                  style={[
+                    styles.segmentText,
+                    formType === "gasto" && { color: "white" },
+                  ]}
+                >
+                  Gastos
+                </Text>
               </Pressable>
               <Pressable
                 style={[
@@ -224,7 +227,14 @@ function TransactionModal({
                   resetInputSelection();
                 }}
               >
-                <Text style={styles.segmentText}>Ingresos</Text>
+                <Text
+                  style={[
+                    styles.segmentText,
+                    formType === "ingreso" && { color: "white" },
+                  ]}
+                >
+                  Ingresos
+                </Text>
               </Pressable>
               <Pressable
                 style={[
@@ -239,7 +249,14 @@ function TransactionModal({
                   resetInputSelection();
                 }}
               >
-                <Text style={styles.segmentText}>Transferencias</Text>
+                <Text
+                  style={[
+                    styles.segmentText,
+                    formType === "transferencia" && { color: "white" },
+                  ]}
+                >
+                  Transferencias
+                </Text>
               </Pressable>
             </View>
 
@@ -603,20 +620,16 @@ function createStyles(colors) {
     modalBackdrop: {
       flex: 1,
       backgroundColor: colors.modalOverlay,
-      justifyContent: "flex-end",
     },
     modalCard: {
       flex: 1,
       backgroundColor: colors.surface,
       padding: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
     },
     modalHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 12,
+      marginVertical: 12,
       gap: 10,
     },
 
@@ -641,24 +654,29 @@ function createStyles(colors) {
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-    },
-    iconDelete: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    iconDeleteSpace: {
-      flex: 1,
+      justifyContent: "flex-end",
+      gap: 10,
     },
     sendButton: {
+      backgroundColor: colors.primary,
+      width: "45%",
       alignItems: "center",
+      padding: 6,
+      borderRadius: 8,
     },
-    iconSend: {
-      color: colors.primaryText,
+    deleteButton: {
+      backgroundColor: colors.expense,
+      width: "45%",
+      alignItems: "center",
+      padding: 6,
+      borderRadius: 8,
+    },
+    textButton: {
+      color: colors.text,
       fontWeight: "500",
-      fontSize: 17,
+      fontSize: 15,
     },
-    // Action bar
+    // Transaction bar
     segmented: {
       flexDirection: "row",
       marginBottom: 14,
@@ -675,6 +693,7 @@ function createStyles(colors) {
       backgroundColor: colors.expense,
       borderTopLeftRadius: 10,
       borderBottomLeftRadius: 10,
+      color: colors.text,
     },
     segmentButtonIngresos: {
       backgroundColor: colors.income,
@@ -685,7 +704,7 @@ function createStyles(colors) {
       borderBottomRightRadius: 10,
     },
     segmentText: {
-      color: colors.surface,
+      color: colors.textMuted,
       fontWeight: "500",
       fontSize: 17,
     },

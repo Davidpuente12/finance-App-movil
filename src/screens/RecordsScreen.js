@@ -69,24 +69,6 @@ function RecordsScreen({
             />
           ))
         )}
-
-        {/* <FlatList
-          data={allFilteredTransactions}
-          keyExtractor={(item) => String(item.id)}
-          scrollEnabled={false}
-          ListEmptyComponent={
-            <EmptyState
-              text={
-                loading
-                  ? "Cargando datos..."
-                  : "No hay resultados con esos filtros."
-              }
-            />
-          }
-          renderItem={({ item }) => (
-            <TransactionRow item={item} onEdit={() => openEditModal(item)} />
-          )}
-        /> */}
       </View>
     </ScrollView>
   );
@@ -105,38 +87,38 @@ function EmptyState({ text }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.surface,
-  },
-  section: {
-    flex: 1,
-    gap: 4,
-    padding: 16,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  sectionTitle: { color: colors.textStrong, fontSize: 17, fontWeight: "500" },
-  sectionMetaContainer: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  sectionMeta: { color: colors.textMuted, fontSize: 13 },
-  accountFilterText: { fontSize: 14, fontWeight: "500" },
-  sectionFilter: { padding: 10 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 15,
-    borderColor: colors.borderStrong,
-    color: colors.textStrong,
-    fontSize: 17,
-  },
-  emptyState: { paddingVertical: 18, alignItems: "center" },
-  emptyStateText: { color: colors.textMuted, textAlign: "center" },
+    container: {
+      flexGrow: 1,
+      backgroundColor: colors.surface,
+    },
+    section: {
+      flex: 1,
+      gap: 4,
+      padding: 16,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    sectionTitle: { color: colors.textStrong, fontSize: 17, fontWeight: "500" },
+    sectionMetaContainer: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    sectionMeta: { color: colors.textMuted, fontSize: 13 },
+    accountFilterText: { fontSize: 14, fontWeight: "500" },
+    sectionFilter: { padding: 10 },
+    input: {
+      borderWidth: 1,
+      borderRadius: 20,
+      padding: 15,
+      borderColor: colors.borderStrong,
+      color: colors.textStrong,
+      fontSize: 17,
+    },
+    emptyState: { paddingVertical: 18, alignItems: "center" },
+    emptyStateText: { color: colors.textMuted, textAlign: "center" },
   });
 }
 
