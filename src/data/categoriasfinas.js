@@ -113,11 +113,6 @@ const categorias_gastos = [
     ],
   },
   {
-    name: "Servicios",
-    icon: <MaterialIcons name="electrical-services" size={20} color="white" />,
-    color: "#e2ad50",
-  },
-  {
     name: "Internet",
     icon: <FontAwesome name="wifi" size={20} color="white" />,
     color: "#3b82f6",
@@ -468,6 +463,11 @@ const categorias_ingresos = [
     name: "Ventas",
     icon: <MaterialCommunityIcons name="storefront" size={20} color="white" />,
     color: "#22c55e",
+  },
+  {
+    name: "Subsidio",
+    icon: <MaterialCommunityIcons name="hand-coin" size={20} color="white" />,
+    color: "#165c68",
   },
   {
     name: "Inversiones",

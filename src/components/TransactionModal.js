@@ -688,7 +688,7 @@ function createStyles(colors) {
       borderRadius: 8,
     },
     textButton: {
-      color: colors.text,
+      color: "white",
       fontWeight: "500",
       fontSize: 15,
     },

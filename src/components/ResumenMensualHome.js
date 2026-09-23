@@ -678,7 +678,9 @@ function createStyles(colors) {
     legendPercentageColumn: {
       flex: 0.8,
       color: colors.text,
-      backgroundColor: "#009032",
+      backgroundColor: "#00b03eb3",
+      borderWidth: 1,
+      borderColor: colors.positive,
       borderRadius: 5,
       fontSize: 13,
       fontWeight: "500",

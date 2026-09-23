@@ -20,7 +20,7 @@ import { StatsScreen } from "./src/screens/StatsScreen";
 import { BudgetsScreen } from "./src/screens/BudgetsScreen";
 import { TransactionModal } from "./src/components/TransactionModal";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
+// import { StatusBar } from "expo-status-bar";
 import { useSQLiteTransactions } from "./src/hook/useSQLiteTransactions.js";
 import { SQLiteProvider } from "expo-sqlite";
 import { ThemeProvider, useTheme } from "./src/theme/ThemeContext";
@@ -346,7 +346,7 @@ function AppContent() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style={isDark ? "light" : "dark"} />
+      {/* <StatusBar style={isDark ? "light" : "dark"} /> */}
       <SafeAreaView
         style={[styles.safeArea, { backgroundColor: colors.background }]}
         edges={["left", "right", "bottom"]}

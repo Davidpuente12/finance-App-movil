@@ -31,8 +31,7 @@ const themes = {
   },
   light: {
     background: "#f1f5f9",
-    background: "#e1f0ff",
-    surface: "#ffffff",
+    surface: "#ffffffea",
     surfaceElevated: "#f8fafc",
     border: "#cbd5e1",
     borderStrong: "#94a3b8",
