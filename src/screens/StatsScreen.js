@@ -277,21 +277,19 @@ function MetricLine({ label, value, tone, colors }) {
 function createStyles(colors) {
   return StyleSheet.create({
     container: {
-      gap: 8,
       backgroundColor: colors.background,
       paddingBottom: 50,
       paddingTop: 5,
     },
-    summaryRow: { flexDirection: "row", gap: 12 },
     section: {
+      backgroundColor: colors.surface,
       marginHorizontal: 5,
-      gap: 12,
-      padding: 16,
+      padding: 14,
       paddingBottom: 30,
       borderRadius: 12,
-      backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.borderStrong,
+      gap: 12,
     },
     sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
     metricLine: {

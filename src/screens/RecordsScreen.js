@@ -53,11 +53,7 @@ function RecordsScreen({
 
         {allFilteredTransactions.length === 0 ? (
           <EmptyState
-            text={
-              loading
-                ? "Cargando datos..."
-                : "No hay resultados con esos filtros."
-            }
+            text={loading ? "Cargando datos..." : "No hay resultados."}
           />
         ) : (
           allFilteredTransactions.map((item) => (

@@ -34,6 +34,10 @@ const categorias_gastos = [
           />
         ),
       },
+      {
+        name: "Postre",
+        icon: <MaterialCommunityIcons name="cupcake" size={20} color="white" />,
+      },
     ],
   },
   {
@@ -445,7 +449,9 @@ const categorias_ingresos = [
   },
   {
     name: "Pension",
-    icon: <MaterialCommunityIcons name="account-cash" size={20} color="white" />,
+    icon: (
+      <MaterialCommunityIcons name="account-cash" size={20} color="white" />
+    ),
     color: "#0ea5e9",
   },
   {

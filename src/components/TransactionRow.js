@@ -8,7 +8,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../theme/ThemeContext";
 
-const getCategoryIcon = (categoria, tipo, styles, colors) => {
+const getCategoryIcon = (categoria, categoriaPadre, tipo, styles, colors) => {
   if (categoria === "Transferencia") {
     return (
       <View style={[styles.categoryIcon, { backgroundColor: colors.primary }]}>
@@ -31,6 +31,32 @@ const getCategoryIcon = (categoria, tipo, styles, colors) => {
       : tipo === "ingreso"
         ? categorias_ingresos
         : [];
+
+  const parentCategory = categoriaPadre
+    ? lista.find(
+        (category) =>
+          category.name.toLowerCase() === categoriaPadre.toLowerCase(),
+      )
+    : null;
+  const parentSubcategory = parentCategory?.subcategorias?.find(
+    (subcategory) => subcategory.name.toLowerCase() === categoria.toLowerCase(),
+  );
+
+  if (parentSubcategory) {
+    return (
+      <View
+        style={[
+          styles.categoryIcon,
+          {
+            backgroundColor:
+              parentSubcategory.color || parentCategory.color || "#2d4473",
+          },
+        ]}
+      >
+        {parentSubcategory.icon || parentCategory.icon}
+      </View>
+    );
+  }
 
   // Buscar categoría de primer nivel
   const topCat = lista.find(
@@ -80,18 +106,50 @@ const getCategoryIcon = (categoria, tipo, styles, colors) => {
   );
 };
 
+const getCategoryLabel = (categoria, categoriaPadre, tipo) => {
+  if (!categoria || !categoriaPadre) return categoria;
+
+  const lista = tipo === "gasto" ? categorias_gastos : categorias_ingresos;
+  const normalizedCategory = categoria.toLowerCase();
+  const matches = lista.reduce(
+    (total, category) =>
+      total +
+      Number(category.name.toLowerCase() === normalizedCategory) +
+      Number(
+        category.subcategorias?.some(
+          (subcategory) =>
+            subcategory.name.toLowerCase() === normalizedCategory,
+        ),
+      ),
+    0,
+  );
+
+  return matches > 1 ? `${categoriaPadre} · ${categoria}` : categoria;
+};
+
 function TransactionRow({ item, cuentas, onEdit }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const accountName = cuentas?.find(
     (cuenta) => cuenta.id === item.cuenta_id,
   )?.nombre;
+  const categoryLabel = getCategoryLabel(
+    item.categoria,
+    item.categoria_padre,
+    item.tipo,
+  );
 
   return (
     <Pressable style={styles.transactionRow} onPress={onEdit}>
-      {getCategoryIcon(item.categoria, item.tipo, styles, colors)}
+      {getCategoryIcon(
+        item.categoria,
+        item.categoria_padre,
+        item.tipo,
+        styles,
+        colors,
+      )}
       <View style={styles.transactionInfo}>
-        <Text style={styles.transactionTitle}>{item.categoria}</Text>
+        <Text style={styles.transactionTitle}>{categoryLabel}</Text>
         {accountName ? (
           <Text style={styles.accountName}>{accountName}</Text>
         ) : null}

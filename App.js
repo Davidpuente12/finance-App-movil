@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -17,6 +17,7 @@ import {
 import { HomeScreen } from "./src/screens/HomeScreen";
 import { RecordsScreen } from "./src/screens/RecordsScreen";
 import { StatsScreen } from "./src/screens/StatsScreen";
+import { BudgetsScreen } from "./src/screens/BudgetsScreen";
 import { TransactionModal } from "./src/components/TransactionModal";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -39,8 +40,24 @@ async function initializeDatabase(db) {
       tipo TEXT NOT NULL,
       monto REAL NOT NULL,
       categoria TEXT,
+      categoria_padre TEXT,
       descripcion TEXT,
       fecha TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS presupuestos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clave TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      nombre TEXT NOT NULL,
+      monto REAL NOT NULL,
+      inicio TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS alertas_presupuesto (
+      presupuesto_id INTEGER NOT NULL,
+      periodo TEXT NOT NULL,
+      estado TEXT NOT NULL,
+      PRIMARY KEY (presupuesto_id, periodo, estado)
     );
   `);
 
@@ -50,6 +67,9 @@ async function initializeDatabase(db) {
 
   const columns = await db.getAllAsync("PRAGMA table_info(transacciones);");
   const hasAccountId = columns.some((column) => column.name === "cuenta_id");
+  const hasCategoryParent = columns.some(
+    (column) => column.name === "categoria_padre",
+  );
 
   const accountColumns = await db.getAllAsync("PRAGMA table_info(cuentas);");
   const hasAccountColor = accountColumns.some(
@@ -59,6 +79,12 @@ async function initializeDatabase(db) {
   if (!hasAccountId) {
     await db.execAsync(
       "ALTER TABLE transacciones ADD COLUMN cuenta_id INTEGER;",
+    );
+  }
+
+  if (!hasCategoryParent) {
+    await db.execAsync(
+      "ALTER TABLE transacciones ADD COLUMN categoria_padre TEXT;",
     );
   }
 
@@ -117,6 +143,10 @@ function AppContent() {
     createAccount,
     renameAccount,
     deleteAccount,
+    presupuestos,
+    saveBudget,
+    deleteBudget,
+    registerBudgetAlert,
     loading,
   } = useSQLiteTransactions();
 
@@ -130,10 +160,15 @@ function AppContent() {
   );
   const [filterDay, setFilterDay] = useState(null);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [activeRouteName, setActiveRouteName] = useState("Inicio");
+
+  // Animacion del boton
+  const fabVisibility = useRef(new Animated.Value(1)).current;
 
   // valores del formulario
   const [formType, setFormType] = useState("gasto");
   const [formCategoria, setFormCategoria] = useState("");
+  const [formCategoriaPadre, setFormCategoriaPadre] = useState(null);
   const [formMonto, setFormMonto] = useState("");
   const [formDescripcion, setFormDescripcion] = useState("");
   const [formFecha, setFormFecha] = useState(getTodayDate());
@@ -199,11 +234,13 @@ function AppContent() {
       .filter((item) => {
         const normalizedQuery = searchQuery.trim().toLowerCase();
         const categoria = (item.categoria || "").toLowerCase();
+        const categoriaPadre = (item.categoria_padre || "").toLowerCase();
         const descripcion = (item.descripcion || "").toLowerCase();
 
         const matchSearch =
           normalizedQuery.length === 0 ||
           categoria.includes(normalizedQuery) ||
+          categoriaPadre.includes(normalizedQuery) ||
           descripcion.includes(normalizedQuery);
 
         const matchYear = (() => {
@@ -251,6 +288,7 @@ function AppContent() {
     setEditingTransaction(null);
     setFormType("gasto");
     setFormCategoria("");
+    setFormCategoriaPadre(null);
     setFormMonto("");
     setFormDescripcion("");
     setFormFecha(getTodayDate());
@@ -277,6 +315,7 @@ function AppContent() {
     setFormType(isTransfer ? "transferencia" : item.tipo);
     setFormMonto(String(item.monto));
     setFormCategoria(item.categoria ?? "");
+    setFormCategoriaPadre(item.categoria_padre ?? null);
     setFormDescripcion(item.descripcion ?? "");
     setFormFecha(item.fecha);
     setFormCuentaId(
@@ -293,6 +332,18 @@ function AppContent() {
     setEditingTransaction(null);
   };
 
+  const isBudgetScreen = activeRouteName === "Presupuestos";
+
+  useEffect(() => {
+    Animated.timing(fabVisibility, {
+      toValue: isBudgetScreen ? 0 : 1,
+      damping: 18,
+      duration: 260,
+      mass: 0.7,
+      useNativeDriver: true,
+    }).start();
+  }, [fabVisibility, isBudgetScreen]);
+
   return (
     <SafeAreaProvider>
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -305,12 +356,18 @@ function AppContent() {
             style={[styles.safeArea, { backgroundColor: colors.background }]}
           >
             <Tab.Navigator
+              screenListeners={{
+                state: (event) => {
+                  const route = event.data.state.routes[event.data.state.index];
+                  setActiveRouteName(route.name);
+                },
+              }}
               screenOptions={({ route }) => ({
-                // tabBarScrollEnabled: true,
-                // tabBarItemStyle: {
-                //   width: "auto",
-                //   paddingHorizontal: 25,
-                // },
+                tabBarScrollEnabled: true,
+                tabBarItemStyle: {
+                  width: "auto",
+                  paddingHorizontal: 18,
+                },
                 headerShown: false,
                 tabBarActiveTintColor: "white",
                 tabBarInactiveTintColor: colors.primaryTextSoft,
@@ -327,7 +384,9 @@ function AppContent() {
                       ? "home-outline"
                       : route.name === "Registros"
                         ? "list-outline"
-                        : "pie-chart-outline";
+                        : route.name === "Estadisticas"
+                          ? "pie-chart-outline"
+                          : "wallet-outline";
 
                   return <Ionicons name={iconName} size={24} color={color} />;
                 },
@@ -397,6 +456,22 @@ function AppContent() {
                   />
                 )}
               </Tab.Screen>
+
+              <Tab.Screen name="Presupuestos">
+                {() => (
+                  <BudgetsScreen
+                    lista={lista}
+                    presupuestos={presupuestos}
+                    saveBudget={saveBudget}
+                    deleteBudget={deleteBudget}
+                    registerBudgetAlert={registerBudgetAlert}
+                    filterMonth={filterMonth}
+                    filterYear={filterYear}
+                    setFilterMonth={setFilterMonth}
+                    setFilterYear={setFilterYear}
+                  />
+                )}
+              </Tab.Screen>
             </Tab.Navigator>
 
             <TransactionModal
@@ -412,6 +487,8 @@ function AppContent() {
               setFormMonto={setFormMonto}
               formCategoria={formCategoria}
               setFormCategoria={setFormCategoria}
+              formCategoriaPadre={formCategoriaPadre}
+              setFormCategoriaPadre={setFormCategoriaPadre}
               formDescripcion={formDescripcion}
               setFormDescripcion={setFormDescripcion}
               formFecha={formFecha}
@@ -423,12 +500,32 @@ function AppContent() {
               setFormCuentaDestinoId={setFormCuentaDestinoId}
             />
 
-            <Pressable
-              style={[styles.fab, { backgroundColor: colors.primary }]}
-              onPress={openNewModal}
+            <Animated.View
+              pointerEvents={isBudgetScreen ? "none" : "auto"}
+              style={[
+                styles.fab,
+                {
+                  backgroundColor: colors.primary,
+                  opacity: fabVisibility,
+                  transform: [
+                    {
+                      translateY: fabVisibility.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [30, 0],
+                      }),
+                    },
+                  ],
+                },
+              ]}
             >
-              <Ionicons name="add" size={30} color="white" />
-            </Pressable>
+              <Pressable
+                accessibilityLabel="Añadir transacción"
+                onPress={openNewModal}
+                style={styles.fabButton}
+              >
+                <Ionicons name="add" size={30} color="white" />
+              </Pressable>
+            </Animated.View>
           </View>
         </NavigationContainer>
       </SafeAreaView>
@@ -469,5 +566,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.24,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
+  },
+  fabButton: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
 });

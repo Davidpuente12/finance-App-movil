@@ -7,21 +7,25 @@ import { categorias_gastos } from "../data/categoriasfinas";
 import { getMonthYearFiltered } from "../utils/fechaActual";
 import { useTheme } from "../theme/ThemeContext";
 
-function getCategoryInfo(category) {
+function getCategoryInfo(category, parentCategoryName) {
+  const parentCategory = getParentCategory(category, parentCategoryName);
+  const subcategoryInfo = parentCategory?.subcategorias?.find(
+    (item) => item.name.toLowerCase() === category,
+  );
+
+  if (subcategoryInfo) {
+    return {
+      ...subcategoryInfo,
+      icon: subcategoryInfo.icon ?? parentCategory.icon,
+      color: subcategoryInfo.color ?? parentCategory.color,
+    };
+  }
+
   const categoryInfo = categorias_gastos.find(
     (item) => item.name.toLowerCase() === category,
   );
 
   if (categoryInfo) return categoryInfo;
-
-  const parentCategory = categorias_gastos.find((item) =>
-    item.subcategorias?.some(
-      (subcategory) => subcategory.name.toLowerCase() === category,
-    ),
-  );
-  const subcategoryInfo = parentCategory?.subcategorias?.find(
-    (item) => item.name.toLowerCase() === category,
-  );
 
   if (!subcategoryInfo) {
     return {
@@ -29,15 +33,17 @@ function getCategoryInfo(category) {
       color: "#2d4473",
     };
   }
-
-  return {
-    ...subcategoryInfo,
-    icon: subcategoryInfo.icon ?? parentCategory.icon,
-    color: subcategoryInfo.color ?? parentCategory.color,
-  };
 }
 
-function getParentCategory(category) {
+function getParentCategory(category, parentCategoryName) {
+  const explicitParentCategory = parentCategoryName
+    ? categorias_gastos.find(
+        (item) => item.name.toLowerCase() === parentCategoryName.toLowerCase(),
+      )
+    : null;
+
+  if (explicitParentCategory) return explicitParentCategory;
+
   return (
     categorias_gastos.find((item) => item.name.toLowerCase() === category) ||
     categorias_gastos.find((item) =>
@@ -63,6 +69,7 @@ function ResumenMensualHome({
   const styles = createStyles(colors);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showAllLegendItems, setShowAllLegendItems] = useState(false);
+  const [expandedSubcategoryKeys, setExpandedSubcategoryKeys] = useState([]);
 
   const monthExpenseItems = useMemo(
     () =>
@@ -81,26 +88,44 @@ function ResumenMensualHome({
     const totals = new Map();
 
     monthExpenseItems.forEach((item) => {
-      const categoriaNormalizada = item.categoria.trim().toLowerCase();
-      totals.set(
-        categoriaNormalizada,
-        (totals.get(categoriaNormalizada) ?? 0) + item.monto,
+      const category = item.categoria.trim();
+      const parentCategory = getParentCategory(
+        category.toLowerCase(),
+        item.categoria_padre,
       );
+      const categoryInfo = getCategoryInfo(
+        category.toLowerCase(),
+        item.categoria_padre,
+      );
+      const parentCategoryName = parentCategory?.name || category;
+      const categoryKey = `${parentCategoryName.toLowerCase()}:${category.toLowerCase()}`;
+      const currentCategory = totals.get(categoryKey);
+
+      totals.set(categoryKey, {
+        key: categoryKey,
+        category: categoryInfo.name || category,
+        parentCategory: parentCategoryName,
+        total: (currentCategory?.total ?? 0) + item.monto,
+        color: categoryInfo.color || "#6b7280",
+        icon: categoryInfo.icon || null,
+      });
     });
 
     return Array.from(totals.entries())
-      .map(([category, total]) => {
-        const catInfo = getCategoryInfo(category);
+      .map(([, item]) => {
         const porcentajeSobreGastos =
-          totalGastosReales > 0 ? (total / totalGastosReales) * 100 : 0;
+          totalGastosReales > 0 ? (item.total / totalGastosReales) * 100 : 0;
         const porcentajeSobreIngresos =
-          totalIngresosMensual > 0 ? (total / totalIngresosMensual) * 100 : 0;
+          totalIngresosMensual > 0
+            ? (item.total / totalIngresosMensual) * 100
+            : 0;
 
         return {
-          category: catInfo?.name || category,
-          total,
-          color: catInfo?.color || "#6b7280",
-          icon: catInfo?.icon || null,
+          ...item,
+          displayName:
+            item.parentCategory === item.category
+              ? item.category
+              : `${item.parentCategory} · ${item.category}`,
           porcentajeSobreGastos,
           porcentajeSobreIngresos,
         };
@@ -112,19 +137,28 @@ function ResumenMensualHome({
     const totals = new Map();
 
     monthExpenseCategories.forEach((item) => {
-      const parentCategory = getParentCategory(item.category.toLowerCase());
-      const category = parentCategory?.name || item.category;
+      const category = item.parentCategory || item.category;
       const currentTotal = totals.get(category);
+      const categoryInfo = getCategoryInfo(category.toLowerCase());
 
       totals.set(category, {
         category,
         total: (currentTotal?.total ?? 0) + item.total,
-        color: parentCategory?.color || item.color,
+        color: currentTotal?.color || categoryInfo.color || item.color,
+        icon: currentTotal?.icon || categoryInfo.icon || item.icon,
       });
     });
 
-    return Array.from(totals.values()).sort((a, b) => b.total - a.total);
-  }, [monthExpenseCategories]);
+    return Array.from(totals.values())
+      .map((item) => ({
+        ...item,
+        porcentajeSobreIngresos:
+          totalIngresosMensual > 0
+            ? (item.total / totalIngresosMensual) * 100
+            : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [monthExpenseCategories, totalIngresosMensual]);
 
   const selectedCategoryExpenses = useMemo(() => {
     if (!selectedCategory) return [];
@@ -136,12 +170,50 @@ function ResumenMensualHome({
 
       const parentCategory = getParentCategory(
         item.categoria.trim().toLowerCase(),
+        item.categoria_padre,
       );
       const category = parentCategory?.name || item.categoria;
 
       return category === selectedCategory;
     });
   }, [selectedCategory, selectedMonthItems]);
+
+  const selectedCategorySubcategories = useMemo(() => {
+    const totals = new Map();
+
+    selectedCategoryExpenses.forEach((item) => {
+      const category = item.categoria.trim();
+      const key = category.toLowerCase();
+      const categoryInfo = getCategoryInfo(key, item.categoria_padre);
+      const currentCategory = totals.get(key);
+
+      totals.set(key, {
+        key,
+        category,
+        total: (currentCategory?.total ?? 0) + item.monto,
+        color: categoryInfo.color || "#6b7280",
+        icon: categoryInfo.icon || null,
+      });
+    });
+
+    return Array.from(totals.values())
+      .map((item) => ({
+        ...item,
+        porcentajeSobreIngresos:
+          totalIngresosMensual > 0
+            ? (item.total / totalIngresosMensual) * 100
+            : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [selectedCategoryExpenses, totalIngresosMensual]);
+
+  const toggleSubcategory = (subcategoryKey) => {
+    setExpandedSubcategoryKeys((currentKeys) =>
+      currentKeys.includes(subcategoryKey)
+        ? currentKeys.filter((key) => key !== subcategoryKey)
+        : [...currentKeys, subcategoryKey],
+    );
+  };
 
   const handleDonutPress = (event) => {
     const { locationX, locationY } = event.nativeEvent;
@@ -182,6 +254,7 @@ function ResumenMensualHome({
         const category = item.category;
         setSelectedCategory(selectedCategory === category ? null : category);
         setShowAllLegendItems(false);
+        setExpandedSubcategoryKeys([]);
         return;
       }
 
@@ -281,61 +354,137 @@ function ResumenMensualHome({
         {/* <View style={styles.legendTitle}>
           <Text style={{ color: colors.accentLight }}>% sobre Ingresos</Text>
         </View> */}
-        {monthExpenseCategories.length === 0 ? (
+        {monthExpenseParentCategories.length === 0 ? (
           <Text style={styles.emptyText}>
             No hay gastos en el mes seleccionado.
           </Text>
         ) : selectedCategory ? (
-          selectedCategoryExpenses
+          selectedCategorySubcategories
             .slice(0, showAllLegendItems ? undefined : 5)
-            .map((item, index) => {
-              const categoryInfo = getCategoryInfo(
-                item.categoria.trim().toLowerCase(),
+            .map((subcategory) => {
+              const isExpanded = expandedSubcategoryKeys.includes(
+                subcategory.key,
+              );
+              const subcategoryExpenses = selectedCategoryExpenses.filter(
+                (item) =>
+                  item.categoria.trim().toLowerCase() === subcategory.key,
               );
 
               return (
-                <View
-                  key={item.id ?? `${item.fecha}-${item.categoria}-${index}`}
-                  style={styles.detailsItem}
-                >
-                  <View style={styles.legendLeft}>
-                    {categoryInfo.icon &&
-                      React.cloneElement(categoryInfo.icon, {
-                        color: categoryInfo.color,
-                      })}
-
-                    <View style={styles.legendMovementInfo}>
+                <View key={subcategory.key}>
+                  <View style={styles.detailsItem}>
+                    <View style={styles.legendLeft}>
+                      <View
+                        style={[
+                          styles.detailsIcon,
+                          { backgroundColor: subcategory.color },
+                        ]}
+                      >
+                        {subcategory.icon}
+                      </View>
                       <Text
                         style={styles.detailsText}
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
-                        {item.categoria}
+                        {formatCategoryName(subcategory.category)}
                       </Text>
-                      {item.descripcion && (
-                        <Text
-                          style={styles.legendMovementDetail}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
-                        >
-                          {item.descripcion}
-                        </Text>
-                      )}
+                    </View>
+                    <View style={styles.legendRight}>
+                      <Text
+                        style={[styles.legendAmount, styles.legendAmountColumn]}
+                      >
+                        {formatearMonto(subcategory.total)}
+                      </Text>
+                      <Text style={styles.legendPercentageColumn}>
+                        {subcategory.porcentajeSobreIngresos.toFixed()}%
+                      </Text>
+                      <TouchableOpacity
+                        accessibilityLabel={`${isExpanded ? "Ocultar" : "Ver"} movimientos de ${subcategory.category}`}
+                        onPress={() => toggleSubcategory(subcategory.key)}
+                        style={styles.subcategoryToggle}
+                      >
+                        <Entypo
+                          name={
+                            isExpanded
+                              ? "chevron-small-up"
+                              : "chevron-small-down"
+                          }
+                          size={26}
+                          color={colors.primaryText}
+                        />
+                      </TouchableOpacity>
                     </View>
                   </View>
-                  <View style={[styles.legendRightExpanded]}>
-                    <Text style={styles.legendAmount}>
-                      {formatearMonto(item.monto)}
-                    </Text>
-                    <Text style={styles.legendMovementDetail}>
-                      {item.fecha}
-                    </Text>
-                  </View>
+
+                  {isExpanded && (
+                    <View style={styles.expandedSection}>
+                      {subcategoryExpenses.map((item, index) => {
+                        const categoryInfo = getCategoryInfo(
+                          item.categoria.trim().toLowerCase(),
+                          item.categoria_padre,
+                        );
+
+                        return (
+                          <View
+                            key={
+                              item.id ??
+                              `${item.fecha}-${item.categoria}-${index}`
+                            }
+                            style={styles.detailsItem}
+                          >
+                            <View style={styles.legendLeft}>
+                              {categoryInfo.icon &&
+                                React.cloneElement(categoryInfo.icon, {
+                                  color: categoryInfo.color,
+                                })}
+                              <View style={styles.legendMovementInfo}>
+                                <Text
+                                  style={[styles.detailsText, { fontSize: 14 }]}
+                                  numberOfLines={1}
+                                  ellipsizeMode="tail"
+                                >
+                                  {item.categoria}
+                                </Text>
+                                {item.descripcion && (
+                                  <Text
+                                    style={[
+                                      styles.legendMovementDetail,
+                                      { fontSize: 11 },
+                                    ]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                  >
+                                    {item.descripcion}
+                                  </Text>
+                                )}
+                              </View>
+                            </View>
+                            <View style={styles.legendRightExpanded}>
+                              <Text
+                                style={[styles.legendAmount, { fontSize: 14 }]}
+                              >
+                                {formatearMonto(item.monto)}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.legendMovementDetail,
+                                  { fontSize: 11 },
+                                ]}
+                              >
+                                {item.fecha}
+                              </Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
                 </View>
               );
             })
         ) : (
-          monthExpenseCategories
+          monthExpenseParentCategories
             .slice(0, showAllLegendItems ? undefined : 5)
             .map((item) => (
               <View key={item.category} style={styles.detailsItem}>
@@ -370,8 +519,10 @@ function ResumenMensualHome({
               </View>
             ))
         )}
-        {(selectedCategory ? selectedCategoryExpenses : monthExpenseCategories)
-          .length > 5 &&
+        {(selectedCategory
+          ? selectedCategorySubcategories
+          : monthExpenseParentCategories
+        ).length > 5 &&
           !showAllLegendItems && (
             <TouchableOpacity
               accessibilityLabel="Ver todos los elementos de la leyenda"
@@ -473,7 +624,7 @@ function createStyles(colors) {
     detailsItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 13,
+      paddingVertical: 12,
       borderBottomWidth: 1,
       borderColor: colors.background,
     },
@@ -491,6 +642,18 @@ function createStyles(colors) {
     },
     legendRightExpanded: {
       alignItems: "center",
+    },
+    subcategoryToggle: {
+      alignItems: "center",
+      justifyContent: "center",
+      width: 26,
+      height: 26,
+    },
+    expandedSection: {
+      backgroundColor: colors.surfaceElevated,
+      paddingHorizontal: 16,
+      marginBottom: 20,
+      borderRadius: 10,
     },
     detailsText: {
       color: colors.text,

@@ -33,6 +33,8 @@ function TransactionModal({
   setFormMonto,
   formCategoria,
   setFormCategoria,
+  formCategoriaPadre,
+  setFormCategoriaPadre,
   formDescripcion,
   setFormDescripcion,
   formFecha,
@@ -117,6 +119,7 @@ function TransactionModal({
       tipo: formType,
       monto: montoValue,
       categoria: formCategoria,
+      categoria_padre: formCategoriaPadre,
       descripcion: formDescripcion,
       fecha: formFecha,
       cuenta_id: formCuentaId,
@@ -184,7 +187,11 @@ function TransactionModal({
                       handleOpen();
                     }}
                   >
-                    <Text style={styles.textButton}>Eliminar</Text>
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color={colors.negative}
+                    />
                   </Pressable>
                 )}
 
@@ -204,6 +211,7 @@ function TransactionModal({
                 onPress={() => {
                   setFormType("gasto");
                   setFormCategoria("");
+                  setFormCategoriaPadre(null);
                   resetInputSelection();
                 }}
               >
@@ -224,6 +232,7 @@ function TransactionModal({
                 onPress={() => {
                   setFormType("ingreso");
                   setFormCategoria("");
+                  setFormCategoriaPadre(null);
                   resetInputSelection();
                 }}
               >
@@ -245,6 +254,7 @@ function TransactionModal({
                 onPress={() => {
                   setFormType("transferencia");
                   setFormCategoria("");
+                  setFormCategoriaPadre(null);
                   setFormDescripcion("");
                   resetInputSelection();
                 }}
@@ -371,7 +381,10 @@ function TransactionModal({
                         selectedCategory ? colors.primaryText : colors.inputText
                       }
                       value={formCategoria}
-                      onChangeText={setFormCategoria}
+                      onChangeText={(value) => {
+                        setFormCategoria(value);
+                        setFormCategoriaPadre(null);
+                      }}
                       onFocus={() => setSelectedCategory(true)}
                       onBlur={() => setSelectedCategory(false)}
                     />
@@ -481,6 +494,7 @@ function TransactionModal({
                               style={styles.subcategoryItem}
                               onPress={() => {
                                 setFormCategoria(item.name);
+                                setFormCategoriaPadre(expanded.name);
                                 setCategoryModalVisible(false);
                                 setExpanded(null);
                               }}
@@ -506,6 +520,7 @@ function TransactionModal({
                               style={styles.categorySelect}
                               onPress={() => {
                                 setFormCategoria(item.name);
+                                setFormCategoriaPadre(null);
                                 setCategoryModalVisible(false);
                               }}
                             >
@@ -659,16 +674,17 @@ function createStyles(colors) {
     },
     sendButton: {
       backgroundColor: colors.primary,
-      width: "45%",
+      width: "50%",
       alignItems: "center",
-      padding: 6,
+      padding: 8,
       borderRadius: 8,
     },
     deleteButton: {
-      backgroundColor: colors.expense,
-      width: "45%",
+      borderWidth: 1,
+      borderColor: colors.negative,
+      width: "30%",
       alignItems: "center",
-      padding: 6,
+      padding: 8,
       borderRadius: 8,
     },
     textButton: {
@@ -679,10 +695,9 @@ function createStyles(colors) {
     // Transaction bar
     segmented: {
       flexDirection: "row",
-      marginBottom: 14,
-      marginTop: 14,
+      marginVertical: 14,
       backgroundColor: colors.border,
-      borderRadius: 10,
+      borderRadius: 5,
     },
     segmentButton: {
       flex: 1,
@@ -691,17 +706,15 @@ function createStyles(colors) {
     },
     segmentButtonGastos: {
       backgroundColor: colors.expense,
-      borderTopLeftRadius: 10,
-      borderBottomLeftRadius: 10,
-      color: colors.text,
+      borderRadius: 5,
     },
     segmentButtonIngresos: {
       backgroundColor: colors.income,
+      borderRadius: 5,
     },
     segmentButtonTransfer: {
-      backgroundColor: colors.primary,
-      borderTopRightRadius: 10,
-      borderBottomRightRadius: 10,
+      backgroundColor: colors.accent,
+      borderRadius: 5,
     },
     segmentText: {
       color: colors.textMuted,
@@ -721,10 +734,14 @@ function createStyles(colors) {
       fontSize: 16,
     },
     validationText: {
+      backgroundColor: `${colors.negative}20`,
       color: colors.negativeSoft,
-      fontSize: 15,
-      marginBottom: 10,
-      marginHorizontal: 4,
+      fontSize: 13,
+      padding: 12,
+      marginTop: 10,
+      borderLeftColor: colors.negative,
+      borderLeftWidth: 3,
+      borderRadius: 5,
     },
 
     // Iconos de categorias

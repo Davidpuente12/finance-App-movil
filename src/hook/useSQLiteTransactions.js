@@ -7,16 +7,20 @@ export function useSQLiteTransactions() {
   const [loading, setLoading] = useState(true);
   const [lista, setLista] = useState([]);
   const [cuentas, setCuentas] = useState([]);
+  const [presupuestos, setPresupuestos] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
 
     const cargarTransacciones = async () => {
       try {
-        const [rows, accountRows] = await Promise.all([
+        const [rows, accountRows, budgetRows] = await Promise.all([
           db.getAllAsync("SELECT * FROM transacciones;"),
           db.getAllAsync(
             "SELECT * FROM cuentas ORDER BY CASE WHEN nombre = 'Efectivo' THEN 0 ELSE 1 END, nombre COLLATE NOCASE;",
+          ),
+          db.getAllAsync(
+            "SELECT * FROM presupuestos ORDER BY nombre COLLATE NOCASE;",
           ),
         ]);
         const normalizedRows = rows.map((item) => ({
@@ -26,6 +30,7 @@ export function useSQLiteTransactions() {
         if (isMounted) {
           setLista(normalizedRows);
           setCuentas(accountRows);
+          setPresupuestos(budgetRows);
         }
       } catch (error) {
         globalThis.console.error("Error cargando transacciones:", error);
@@ -46,16 +51,18 @@ export function useSQLiteTransactions() {
       ...payload,
       fecha: normalizeFecha(payload.fecha),
       cuenta_id: Number(payload.cuenta_id),
+      categoria_padre: payload.categoria_padre || null,
     };
 
     try {
       if (editingId) {
         await db.runAsync(
-          "UPDATE transacciones SET tipo=?, monto=?, categoria=?, descripcion=?, fecha=?, cuenta_id=? WHERE id=?;",
+          "UPDATE transacciones SET tipo=?, monto=?, categoria=?, categoria_padre=?, descripcion=?, fecha=?, cuenta_id=? WHERE id=?;",
           [
             normalizedPayload.tipo,
             normalizedPayload.monto,
             normalizedPayload.categoria,
+            normalizedPayload.categoria_padre,
             normalizedPayload.descripcion,
             normalizedPayload.fecha,
             normalizedPayload.cuenta_id,
@@ -71,11 +78,12 @@ export function useSQLiteTransactions() {
         );
       } else {
         const result = await db.runAsync(
-          "INSERT INTO transacciones (tipo, monto, categoria, descripcion, fecha, cuenta_id) VALUES (?, ?, ?, ?, ?, ?);",
+          "INSERT INTO transacciones (tipo, monto, categoria, categoria_padre, descripcion, fecha, cuenta_id) VALUES (?, ?, ?, ?, ?, ?, ?);",
           [
             normalizedPayload.tipo,
             normalizedPayload.monto,
             normalizedPayload.categoria,
+            normalizedPayload.categoria_padre,
             normalizedPayload.descripcion,
             normalizedPayload.fecha,
             normalizedPayload.cuenta_id,
@@ -335,6 +343,79 @@ export function useSQLiteTransactions() {
     }
   };
 
+  const saveBudget = async ({ id, clave, nombre, monto, inicio }) => {
+    const normalizedAmount = Number(monto);
+    if (!clave || !nombre || !inicio || normalizedAmount <= 0) return false;
+
+    try {
+      if (id) {
+        await db.runAsync("UPDATE presupuestos SET monto=? WHERE id=?;", [
+          normalizedAmount,
+          id,
+        ]);
+        setPresupuestos((current) =>
+          current.map((budget) =>
+            budget.id === id ? { ...budget, monto: normalizedAmount } : budget,
+          ),
+        );
+      } else {
+        const result = await db.runAsync(
+          "INSERT INTO presupuestos (clave, nombre, monto, inicio) VALUES (?, ?, ?, ?);",
+          [clave, nombre, normalizedAmount, inicio],
+        );
+        setPresupuestos((current) => [
+          ...current,
+          {
+            id: result.lastInsertRowId,
+            clave,
+            nombre,
+            monto: normalizedAmount,
+            inicio,
+          },
+        ]);
+      }
+      return true;
+    } catch (error) {
+      globalThis.console.error("Error guardando presupuesto:", error);
+      return false;
+    }
+  };
+
+  const deleteBudget = async (budgetId) => {
+    try {
+      await db.withTransactionAsync(async () => {
+        await db.runAsync(
+          "DELETE FROM alertas_presupuesto WHERE presupuesto_id=?;",
+          [budgetId],
+        );
+        await db.runAsync("DELETE FROM presupuestos WHERE id=?;", [budgetId]);
+      });
+      setPresupuestos((current) =>
+        current.filter((budget) => budget.id !== budgetId),
+      );
+      return true;
+    } catch (error) {
+      globalThis.console.error("Error eliminando presupuesto:", error);
+      return false;
+    }
+  };
+
+  const registerBudgetAlert = async (budgetId, periodo, estado) => {
+    try {
+      const result = await db.runAsync(
+        "INSERT OR IGNORE INTO alertas_presupuesto (presupuesto_id, periodo, estado) VALUES (?, ?, ?);",
+        [budgetId, periodo, estado],
+      );
+      return result.changes > 0;
+    } catch (error) {
+      globalThis.console.error(
+        "Error registrando alerta de presupuesto:",
+        error,
+      );
+      return false;
+    }
+  };
+
   return {
     lista,
     cuentas,
@@ -344,6 +425,10 @@ export function useSQLiteTransactions() {
     createAccount,
     renameAccount,
     deleteAccount,
+    presupuestos,
+    saveBudget,
+    deleteBudget,
+    registerBudgetAlert,
     loading,
   };
 }

@@ -532,7 +532,8 @@ function createStyles(colors) {
       paddingBottom: 60,
     },
     section: {
-      margin: 5,
+      marginHorizontal: 5,
+      marginVertical: 8,
       gap: 12,
       padding: 14,
       borderRadius: 12,
@@ -544,7 +545,6 @@ function createStyles(colors) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 4,
     },
     sectionTitle: { color: colors.text, fontSize: 17, fontWeight: "500" },
     sectionFooter: {
@@ -649,12 +649,12 @@ function createStyles(colors) {
     accountsList: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 10,
+      gap: 5,
     },
     accountCard: {
       width: "48.5%",
       paddingHorizontal: 8,
-      paddingVertical: 5,
+      paddingVertical: 3,
       borderRadius: 8,
       borderWidth: 2,
       borderColor: "transparent",
